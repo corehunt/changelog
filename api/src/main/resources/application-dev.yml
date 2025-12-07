@@ -1,0 +1,26 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/changelog
+    username: postgres
+    password: postgres
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate.jdbc.time_zone: UTC
+    open-in-view: false
+    show-sql: true
+  liquibase:
+    enabled: false
+
+management.endpoints.web.exposure.include: health,info,metrics
+
+changelog:
+  allowed-origins: http://localhost:3000
+  timezone-default: America/New_York
+
+security:
+  jwt:
+    signing-key: "dev-32-byte-minimum-base64-or-raw-secret-change-me"
+    issuer: "changelog"
+    access-token-ttl-minutes: 60
