@@ -6,3 +6,6 @@
  */
 
 export const AUTH_ENABLED = true;
+
+// where we store the JWT from AuthResponse.accessToken
+export const TOKEN_STORAGE_KEY = 'changelog_token';
