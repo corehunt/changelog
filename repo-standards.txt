@@ -1,0 +1,179 @@
+1. Project + module naming
+Artifact / repo / module names
+
+Use lowercase kebab-case for:
+    Git repo: customer-service-api
+    Maven artifactId / Gradle project: customer-service
+    If you have multiple modules:
+        - customer-service-api (public API contracts, DTOs, client)
+        - customer-service-app (Spring Boot app)
+        - customer-service-domain (domain logic)
+        - customer-service-infrastructure (db, messaging, integrations)
+    GroupId
+
+A common layered structure:
+
+com.company.customer
+  ├─ api                // controllers, DTOs, API contracts
+  ├─ domain             // domain models & core business logic
+  ├─ application        // use cases / services orchestrating domain
+  ├─ infrastructure
+  │    ├─ persistence   // repositories, JPA entities
+  │    ├─ messaging     // Kafka, queues
+  │    └─ webclient     // REST clients to other services
+  └─ config             // configs, security, etc.
+
+*You can simplify to controller, service, repository in smaller apps, but keep clear separation.
+
+3. Class and interface naming
+
+General rules
+    - Classes: PascalCase
+        - CustomerController, CustomerService, CustomerRepository
+    - Interfaces: PascalCase
+        - Prefer role-based names, not prefixes: CustomerRepository (interface), JpaCustomerRepository (implementation) – instead of ICustomerRepository.
+    - Enums: PascalCase for type, SCREAMING_SNAKE_CASE for constants:
+        - OrderStatus.PENDING, OrderStatus.COMPLETED
+
+Common patterns
+    - Controllers: XxxController or XxxRestController
+    - Services: XxxService, XxxApplicationService
+    - Repositories: XxxRepository
+    - Config classes: XxxConfig (e.g., WebSecurityConfig, KafkaConfig)
+    - Exceptions: XxxException (CustomerNotFoundException)
+
+4. Methods, fields, and variables
+
+Methods
+- camelCase, start with a verb, describe behavior:
+    ex: createCustomer, findByEmail, updateStatus, calculateDiscount
+
+Controller methods:
+    - getCustomer, listCustomers, createCustomer, updateCustomer, deleteCustomer
+
+Fields and local variables
+    - camelCase, descriptive, no Hungarian notation:
+        - customerId, orderTotal, createdAt
+
+Constants
+    - SCREAMING_SNAKE_CASE, static final:
+        private static final int MAX_RETRY_COUNT = 3;
+        private static final String HEADER_CORRELATION_ID = "X-Correlation-Id";
+
+5. REST endpoint design and naming
+Base path
+    - Use plural nouns for resources:
+        /api/customers
+        /api/orders
+    - Version in the URL if you need:
+        /api/v1/customers
+
+Resource paths
+- Use nouns, not verbs, and respect hierarchy:
+        GET    /api/v1/customers             // list
+        POST   /api/v1/customers             // create
+        GET    /api/v1/customers/{id}        // retrieve
+        PUT    /api/v1/customers/{id}        // replace
+        PATCH  /api/v1/customers/{id}        // partial update
+        DELETE /api/v1/customers/{id}        // delete
+
+        GET    /api/v1/customers/{id}/orders // nested resource
+
+- For actions that don’t map cleanly to CRUD, use a sub-resource or verb-like segment but keep it clear:
+    - POST /api/v1/orders/{id}/cancel
+    - POST /api/v1/orders/{id}/resend-confirmation
+
+Query parameters
+- Use clear names:
+    - GET /api/v1/customers?status=ACTIVE&page=0&size=20&sort=createdAt,desc
+
+6. DTOs, entities, and domain models
+DTOs and API models
+- Name them to show their role:
+    - CustomerRequest, CreateCustomerRequest, CustomerResponse
+    - OrderSummaryResponse, PagedCustomersResponse
+- Keep DTOs separate from entities/domain models to decouple API shape from persistence.
+
+Entities
+- Name them as domain objects:
+    - Customer, Order, OrderItem
+- If needed, suffix with Entity:
+    - CustomerEntity (mapped to DB), Customer (domain) – but don’t overdo suffixes everywhere.
+
+Mapping
+- Use a dedicated mapper:
+    - CustomerMapper with methods like toResponse(Customer) and toDomain(CustomerRequest).
+
+7. Configuration and properties
+application.properties / application.yml
+    - Use dot-separated, lower-case property names:
+        customer:
+          service:
+            base-url: https://customer-service.internal
+        spring:
+          datasource:
+            url: jdbc:postgresql://...
+
+Configuration classes
+- Group logically:
+    - WebConfig, SecurityConfig, DataSourceConfig, KafkaConfig
+- Place them under config package:
+    - com.company.customer.config.WebConfig
+
+8. Error handling and response format
+Exceptions
+- Domain/functional:
+    - CustomerNotFoundException, InvalidOrderStateException
+- Technical:
+    - DatabaseException, ExternalServiceException
+
+Error response model
+- Standardize a single error payload, e.g.:
+
+    public class ErrorResponse {
+        private String code;        // e.g. "CUSTOMER_NOT_FOUND"
+        private String message;     // user-friendly summary
+        private String detail;      // optional extra info
+        private Instant timestamp;
+        private String traceId;     // for correlation
+    }
+
+- Error codes: UPPER_SNAKE_CASE string values, maybe grouped:
+    - CUSTOMER_NOT_FOUND, ORDER_ALREADY_COMPLETED, VALIDATION_FAILED
+
+9. API versioning
+- Package-level:
+    - com.company.customer.api.v1
+    - com.company.customer.api.v2
+
+- URL-level (most common for public APIs):
+    - /api/v1/customers
+    - /api/v2/customers
+
+- Class naming (optional):
+    - CustomerControllerV1, CustomerControllerV2 if both live side-by-side.
+
+Pick one primary strategy and stick with it.
+
+10. Testing setup and naming
+Test packages mirror main packages
+    src/main/java/com/company/customer/...
+    src/test/java/com/company/customer/...
+
+Test class names
+- For a class CustomerService:
+    - CustomerServiceTest (JUnit)
+- For controller tests:
+    - CustomerControllerTest or CustomerControllerIT for integration tests
+- Method names:
+    - createCustomer_shouldCreateCustomerWhenDataIsValid()
+
+11. General principles
+- Consistency > perfection: pick a pattern and apply it everywhere.
+- Clarity over cleverness: name things so a new engineer can guess what they do.
+- One responsibility per type:
+    - Controllers = HTTP handling
+    - Services = business use cases
+    - Domain models = business rules
+    - Repositories = persistence
+    - Config = wiring and settings
