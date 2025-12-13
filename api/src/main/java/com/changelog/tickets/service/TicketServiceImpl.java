@@ -48,6 +48,7 @@ public class TicketServiceImpl implements TicketService {
     }
 
     @Override
+    @Transactional
     public TicketSummaryResponse createTicket(CreateTicketRequest request) {
         Ticket ticket = Ticket.builder()
                 .id(ticketIdGenerator.generateId())

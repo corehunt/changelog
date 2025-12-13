@@ -8,7 +8,7 @@ import java.util.List;
 
 @Component
 public class TicketMapper {
-
+    //TODO refactor into one abstract mapper
     public TicketDetailResponse toDetailResponse(Ticket ticket) {
         if (ticket == null) {
             return null;
