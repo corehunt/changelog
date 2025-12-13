@@ -1,3 +1,4 @@
+// app/dashboard/page.tsx
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -8,7 +9,7 @@ import { ActiveTicketsPanel } from '@/components/ActiveTicketsPanel';
 import { DashboardTicketsList } from '@/components/DashboardTicketsList';
 import { getTickets, TicketFilters, TicketSort } from '@/lib/api/tickets';
 import { getEntries } from '@/lib/api/entries';
-import { Ticket, TicketStatus } from '@/lib/types';
+import { Ticket } from '@/lib/types';
 import { ProtectedRoute } from '@/lib/auth/ProtectedRoute';
 import { AUTH_ENABLED } from '@/lib/auth/config';
 
@@ -53,9 +54,9 @@ export default function DashboardPage() {
   async function loadActiveTickets() {
     try {
       const response = await getTickets(
-        { status: 'ACTIVE' },
-        { field: 'start_date', direction: 'desc' },
-        { page: 1, pageSize: 10 }
+          { status: 'ACTIVE' },
+          { field: 'start_date', direction: 'desc' },
+          { page: 1, pageSize: 10 }
       );
       setActiveTickets(response.tickets);
     } catch (error) {
@@ -69,11 +70,11 @@ export default function DashboardPage() {
         getTickets({ status: 'ACTIVE' }, undefined, { page: 1, pageSize: 1 }),
         getTickets({ status: 'COMPLETED' }, undefined, { page: 1, pageSize: 1 }),
         getEntries(
-          {
-            dateFrom: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-          },
-          undefined,
-          { page: 1, pageSize: 1 }
+            {
+              dateFrom: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+            },
+            undefined,
+            { page: 1, pageSize: 1 }
         ),
       ]);
 
@@ -98,38 +99,38 @@ export default function DashboardPage() {
   };
 
   return (
-    <ProtectedRoute enabled={AUTH_ENABLED}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
-        <PageHeader
-          title="Admin Console"
-          subtitle="Internal view of tickets, entries, and recent activity."
-        />
+      <ProtectedRoute enabled={AUTH_ENABLED}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
+          <PageHeader
+              title="Admin Console"
+              subtitle="Internal view of tickets, entries, and recent activity."
+          />
 
-        <AdminMetricsRow metrics={metrics} />
+          <AdminMetricsRow metrics={metrics} />
 
-        <AdminQuickActions />
+          <AdminQuickActions />
 
-        {activeTickets.length > 0 && (
-          <div className="mb-16">
-            <ActiveTicketsPanel tickets={activeTickets} showManageButton={true} />
-          </div>
-        )}
+          {activeTickets.length > 0 && (
+              <div className="mb-16">
+                <ActiveTicketsPanel tickets={activeTickets} showManageButton={true} />
+              </div>
+          )}
 
-        <DashboardTicketsList
-          tickets={tickets}
-          total={total}
-          page={page}
-          pageSize={pageSize}
-          loading={loading}
-          filters={filters}
-          sort={sort}
-          onFiltersChange={setFilters}
-          onSortChange={setSort}
-          onPageChange={setPage}
-          onRefresh={handleRefresh}
-          defaultFilters={{ statusNot: 'ACTIVE' }}
-        />
-      </div>
-    </ProtectedRoute>
+          <DashboardTicketsList
+              tickets={tickets}
+              total={total}
+              page={page}
+              pageSize={pageSize}
+              loading={loading}
+              filters={filters}
+              sort={sort}
+              onFiltersChange={setFilters}
+              onSortChange={setSort}
+              onPageChange={setPage}
+              onRefresh={handleRefresh}
+              defaultFilters={{ statusNot: 'ACTIVE' }}
+          />
+        </div>
+      </ProtectedRoute>
   );
 }

@@ -1,3 +1,5 @@
+// frontend/lib/api/tickets.ts
+import { authedGet } from '../http';
 import { supabase } from '../supabase';
 import { Ticket, TicketStatus } from '../types';
 
@@ -29,91 +31,59 @@ export interface TicketsResponse {
   totalPages: number;
 }
 
+// This shape should match what your Spring Boot controller returns
+interface BackendTicketsResponse extends TicketsResponse {}
+
+/**
+ * New implementation: call Spring Boot instead of Supabase.
+ * Endpoint: GET /api/tickets
+ */
 export async function getTickets(
-  filters?: TicketFilters,
-  sort?: TicketSort,
-  pagination?: PaginationParams
+    filters?: TicketFilters,
+    sort?: TicketSort,
+    pagination?: PaginationParams
 ): Promise<TicketsResponse> {
-  let query = supabase.from('tickets').select('*', { count: 'exact' });
+  const params: Record<string, string> = {};
 
-  if (filters?.status) {
-    query = query.eq('status', filters.status);
+  // filters → query params
+  if (filters?.status) params.status = filters.status;
+  if (filters?.statusNot) params.statusNot = filters.statusNot;
+  if (filters?.isPublic !== undefined) params.isPublic = String(filters.isPublic);
+  if (filters?.technologies?.length) {
+    params.technologies = filters.technologies.join(',');
   }
+  if (filters?.startDateFrom) params.startDateFrom = filters.startDateFrom;
+  if (filters?.startDateTo) params.startDateTo = filters.startDateTo;
+  if (filters?.search) params.search = filters.search;
 
-  if (filters?.statusNot) {
-    query = query.neq('status', filters.statusNot);
-  }
+  // sort → query params
+  params.sortField = sort?.field ?? 'start_date';
+  params.sortDirection = sort?.direction ?? 'desc';
 
-  if (filters?.isPublic !== undefined) {
-    query = query.eq('is_public', filters.isPublic);
-  }
+  // pagination → query params
+  const page = pagination?.page ?? 1;
+  const pageSize = pagination?.pageSize ?? 20;
+  params.page = String(page);
+  params.pageSize = String(pageSize);
 
-  if (filters?.technologies && filters.technologies.length > 0) {
-    query = query.contains('technologies', filters.technologies);
-  }
+  const res = await authedGet<BackendTicketsResponse>('/api/tickets', {
+    params,
+  });
 
-  if (filters?.startDateFrom) {
-    query = query.gte('start_date', filters.startDateFrom);
-  }
-
-  if (filters?.startDateTo) {
-    query = query.lte('start_date', filters.startDateTo);
-  }
-
-  if (filters?.search) {
-    query = query.or(
-      `title.ilike.%${filters.search}%,background.ilike.%${filters.search}%,slug.ilike.%${filters.search}%`
-    );
-  }
-
-  const sortField = sort?.field || 'start_date';
-  const sortDirection = sort?.direction || 'desc';
-  query = query.order(sortField, { ascending: sortDirection === 'asc' });
-
-  const page = pagination?.page || 1;
-  const pageSize = pagination?.pageSize || 20;
-  const from = (page - 1) * pageSize;
-  const to = from + pageSize - 1;
-
-  query = query.range(from, to);
-
-  const { data, error, count } = await query;
-
-  if (error) throw error;
-
-  const tickets: Ticket[] = (data || []).map((row) => ({
-    id: row.id,
-    slug: row.slug,
-    title: row.title,
-    status: row.status as TicketStatus,
-    startDate: row.start_date,
-    endDate: row.end_date || undefined,
-    background: row.background || undefined,
-    technologies: row.technologies,
-    learned: row.learned || undefined,
-    roadblocksSummary: row.roadblocks_summary || undefined,
-    metricsSummary: row.metrics_summary || undefined,
-    isPublic: row.is_public,
-  }));
-
-  const total = count || 0;
-  const totalPages = Math.ceil(total / pageSize);
-
-  return {
-    tickets,
-    total,
-    page,
-    pageSize,
-    totalPages,
-  };
+  return res;
 }
+
+/**
+ * The rest of these still use Supabase for now, so your existing components
+ * (detail views, bulk actions, etc.) keep compiling and working.
+ */
 
 export async function getTicketById(id: string): Promise<Ticket | null> {
   const { data, error } = await supabase
-    .from('tickets')
-    .select('*')
-    .eq('id', id)
-    .maybeSingle();
+      .from('tickets')
+      .select('*')
+      .eq('id', id)
+      .maybeSingle();
 
   if (error) throw error;
   if (!data) return null;
@@ -136,10 +106,10 @@ export async function getTicketById(id: string): Promise<Ticket | null> {
 
 export async function getTicketBySlug(slug: string): Promise<Ticket | null> {
   const { data, error } = await supabase
-    .from('tickets')
-    .select('*')
-    .eq('slug', slug)
-    .maybeSingle();
+      .from('tickets')
+      .select('*')
+      .eq('slug', slug)
+      .maybeSingle();
 
   if (error) throw error;
   if (!data) return null;
@@ -162,22 +132,22 @@ export async function getTicketBySlug(slug: string): Promise<Ticket | null> {
 
 export async function createTicket(ticket: Omit<Ticket, 'id'>): Promise<Ticket> {
   const { data, error } = await supabase
-    .from('tickets')
-    .insert({
-      slug: ticket.slug,
-      title: ticket.title,
-      status: ticket.status,
-      start_date: ticket.startDate,
-      end_date: ticket.endDate || null,
-      background: ticket.background || null,
-      technologies: ticket.technologies,
-      learned: ticket.learned || null,
-      roadblocks_summary: ticket.roadblocksSummary || null,
-      metrics_summary: ticket.metricsSummary || null,
-      is_public: ticket.isPublic,
-    })
-    .select()
-    .single();
+      .from('tickets')
+      .insert({
+        slug: ticket.slug,
+        title: ticket.title,
+        status: ticket.status,
+        start_date: ticket.startDate,
+        end_date: ticket.endDate || null,
+        background: ticket.background || null,
+        technologies: ticket.technologies,
+        learned: ticket.learned || null,
+        roadblocks_summary: ticket.roadblocksSummary || null,
+        metrics_summary: ticket.metricsSummary || null,
+        is_public: ticket.isPublic,
+      })
+      .select()
+      .single();
 
   if (error) throw error;
 
@@ -215,11 +185,11 @@ export async function updateTicket(id: string, updates: Partial<Ticket>): Promis
   if (updates.isPublic !== undefined) updateData.is_public = updates.isPublic;
 
   const { data, error } = await supabase
-    .from('tickets')
-    .update(updateData)
-    .eq('id', id)
-    .select()
-    .single();
+      .from('tickets')
+      .update(updateData)
+      .eq('id', id)
+      .select()
+      .single();
 
   if (error) throw error;
 
@@ -255,11 +225,11 @@ export async function updateTicketStatus(id: string, status: TicketStatus): Prom
   }
 
   const { data, error } = await supabase
-    .from('tickets')
-    .update(updateData)
-    .eq('id', id)
-    .select()
-    .single();
+      .from('tickets')
+      .update(updateData)
+      .eq('id', id)
+      .select()
+      .single();
 
   if (error) throw error;
 
@@ -293,9 +263,9 @@ export async function bulkUpdateTickets(ids: string[], updates: Partial<Ticket>)
   if (updates.isPublic !== undefined) updateData.is_public = updates.isPublic;
 
   const { error } = await supabase
-    .from('tickets')
-    .update(updateData)
-    .in('id', ids);
+      .from('tickets')
+      .update(updateData)
+      .in('id', ids);
 
   if (error) throw error;
 }
