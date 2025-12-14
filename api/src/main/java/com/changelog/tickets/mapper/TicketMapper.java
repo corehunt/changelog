@@ -1,6 +1,7 @@
 package com.changelog.tickets.mapper;
 
 import com.changelog.tickets.dto.TicketDetailResponse;
+import com.changelog.tickets.dto.TicketSummaryResponse;
 import com.changelog.tickets.model.Ticket;
 import org.springframework.stereotype.Component;
 
@@ -27,6 +28,18 @@ public class TicketMapper {
                 .learned(ticket.getLearned())
                 .roadblocksSummary(ticket.getRoadblocksSummary())
                 .metricsSummary(ticket.getMetricsSummary())
+                .build();
+    }
+
+    public TicketSummaryResponse toSummary(Ticket ticket) {
+        return TicketSummaryResponse.builder()
+                .id(ticket.getId())
+                .slug(ticket.getSlug())
+                .title(ticket.getTitle())
+                .status(ticket.getStatus())
+                .startDate(ticket.getStartDate())
+                .endDate(ticket.getEndDate())
+                .technologies(ticket.getTechnologies())
                 .build();
     }
 
