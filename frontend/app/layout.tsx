@@ -10,8 +10,9 @@ const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 const robotoMono = Roboto_Mono({ subsets: ['latin'], variable: '--font-roboto-mono' });
 
 export const metadata: Metadata = {
-  title: 'ChangeLog',
-  description: 'Developer work log and impact tracker',
+  title: "Changelog - Corey’s Engineering Log",
+  description: "Developer work log and impact tracker",
+  icons: "/favicon.ico",
 };
 
 export default function RootLayout({
@@ -33,28 +34,28 @@ export default function RootLayout({
             <div className="max-w-7xl mx-auto px-6 md:px-12 lg:px-16">
               <div className="flex items-center justify-between h-20">
                 <div className="flex items-center gap-12">
-                  <span className="font-semibold text-sm tracking-wider">{'>'}_ ChangeLog</span>
+                  <span className="font-semibold text-sm tracking-wider">{'>_'} changelog/</span>
                   <div className="hidden md:flex items-center gap-8">
                     <Link
                         href="/"
                         className="text-sm hover:text-white transition-colors"
                         style={{color: THEME.colors.text.secondary}}
                     >
-                      Tickets
+                      tickets/
                     </Link>
                     <Link
                         href="/timeline"
                         className="text-sm hover:text-white transition-colors"
                         style={{color: THEME.colors.text.secondary}}
                     >
-                      Timeline
+                      timeline/
                     </Link>
                     <Link
                         href="/about"
                         className="text-sm hover:text-white transition-colors"
                         style={{color: THEME.colors.text.secondary}}
                     >
-                      About
+                      about/
                     </Link>
                   </div>
                 </div>
