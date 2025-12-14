@@ -1,8 +1,8 @@
 spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/changelog
-    username: postgres
-    password: postgres
+    username: app_user
+    password: password
   jpa:
     hibernate:
       ddl-auto: update
