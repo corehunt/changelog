@@ -2,45 +2,64 @@ import { SystemStatusPanel } from '@/components/SystemStatusPanel';
 import { ActiveTicketsPanel } from '@/components/ActiveTicketsPanel';
 import { RecentLogStream } from '@/components/RecentLogStream';
 import { PageHeader } from '@/components/PageHeader';
-import { mockTickets, mockEntries, getTicketById } from '@/lib/mockData';
 import { THEME } from '@/lib/theme';
 
-export default function Home() {
-  const activeTickets = mockTickets.filter(t => t.status === 'ACTIVE');
-  const completedTickets = mockTickets.filter(t => t.status === 'COMPLETED');
+import { getDashboardHome } from '@/lib/api/dashboard';
+import type { Ticket, Entry } from '@/lib/types';
 
-  const oneWeekAgo = new Date();
-  oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-  const logsThisWeek = mockEntries.filter(
-      e => new Date(e.date) >= oneWeekAgo
-  ).length;
+export default async function Home() {
+  const dashboard = await getDashboardHome();
 
-  const sortedEntries = [...mockEntries].sort(
-      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-  );
-  const lastUpdate = sortedEntries.length > 0
-      ? new Date(sortedEntries[0].date).toLocaleDateString('en-US', {
+  // --- Tickets ---
+  const activeTickets: Ticket[] = dashboard.activeTickets.map((t) => ({
+    id: String(t.id),
+    slug: t.slug,
+    title: t.title,
+    status: t.status,
+    startDate: t.startDate,
+    endDate: t.endDate ?? undefined,
+    technologies: t.technologies,
+    isPublic: true, // dashboard summaries don’t include this yet
+  }));
+
+  // Only the length is used by SystemStatusPanel
+  const completedTicketsCount = dashboard.metrics.completedTickets;
+
+  // --- Entries ---
+  const recentEntries: Entry[] = dashboard.recentEntries.map((e) => ({
+    id: String(e.entryId),
+    ticketId: e.ticketName, // used as lookup key
+    date: e.date,
+    title: e.title ?? undefined,
+    body: e.body ?? undefined,
+    technologies: e.technologies,
+    isPublic: e.visibility === 'Public',
+  }));
+
+  // --- Metrics ---
+  const logsThisWeek = dashboard.metrics.logsThisWeek;
+
+  const lastUpdate = dashboard.metrics.lastUpdate
+      ? new Date(dashboard.metrics.lastUpdate).toLocaleDateString('en-US', {
         month: 'short',
         day: 'numeric',
         year: 'numeric',
       })
       : 'No entries';
 
-  const recentEntries = sortedEntries.slice(0, 5);
+  const ticketByTitle = new Map(activeTickets.map((t) => [t.title, t]));
 
   const getTicketTitle = (ticketId: string) => {
-    const ticket = getTicketById(ticketId);
-    return ticket ? ticket.title : 'Unknown';
+    return ticketByTitle.get(ticketId)?.title ?? ticketId ?? 'Unknown';
   };
 
   const getTicketSlug = (ticketId: string) => {
-    const ticket = getTicketById(ticketId);
-    return ticket?.slug;
+    return ticketByTitle.get(ticketId)?.slug;
   };
 
   return (
       <div>
-        <div className="min-h-screen flex flex-col justify-center max-w-7xl mx-auto px-6 md:px-12 lg:px-16 pb-16">
+        <div className="min-h-screen flex flex-col justify-start max-w-7xl mx-auto px-6 md:px-12 lg:px-16 pb-16">
           <div className="py-12">
             <PageHeader
                 title="Ticket Dashboard"
@@ -56,7 +75,7 @@ export default function Home() {
             <div className="lg:col-span-4">
               <SystemStatusPanel
                   activeTickets={activeTickets.length}
-                  completedTickets={completedTickets.length}
+                  completedTickets={completedTicketsCount}
                   logsThisWeek={logsThisWeek}
                   lastUpdate={lastUpdate}
               />
@@ -64,7 +83,11 @@ export default function Home() {
 
             <div className="lg:col-span-8 space-y-16">
               <ActiveTicketsPanel tickets={activeTickets} />
-              <RecentLogStream entries={recentEntries} getTicketTitle={getTicketTitle} getTicketSlug={getTicketSlug} />
+              <RecentLogStream
+                  entries={recentEntries}
+                  getTicketTitle={getTicketTitle}
+                  getTicketSlug={getTicketSlug}
+              />
             </div>
           </div>
         </div>
