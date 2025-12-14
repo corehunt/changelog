@@ -8,6 +8,7 @@ import com.changelog.tickets.model.TicketStatus;
 import com.changelog.tickets.repository.TicketRepository;
 import com.changelog.tickets.util.TicketIdGenerator;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -17,6 +18,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class TicketServiceImpl implements TicketService {
 
     private final TicketRepository ticketRepository;
@@ -28,14 +30,14 @@ public class TicketServiceImpl implements TicketService {
 
         Page<Ticket> page;
 
-        if (filters.getStatus() != null && !filters.getStatus().isBlank()) {
+        if (filters.getStatus() != null) {
             page = ticketRepository.findByStatus(filters.getStatus(), pageable);
         } else {
             page = ticketRepository.findAll(pageable);
         }
 
         List<TicketSummaryResponse> summaries = page.getContent().stream()
-                .map(this::toSummary)
+                .map(ticketMapper::toSummary)
                 .toList();
 
         return TicketsPageResponse.builder()
@@ -64,7 +66,7 @@ public class TicketServiceImpl implements TicketService {
 
         Ticket savedTicket = ticketRepository.save(ticket);
 
-        return toSummary(savedTicket);
+        return ticketMapper.toSummary(savedTicket);
     }
 
     @Override
@@ -115,18 +117,6 @@ public class TicketServiceImpl implements TicketService {
 
         ticket.setStatus(TicketStatus.ARCHIVED);
         ticketRepository.save(ticket);
-    }
-
-    private TicketSummaryResponse toSummary(Ticket ticket) {
-        return TicketSummaryResponse.builder()
-                .id(ticket.getId())
-                .slug(ticket.getSlug())
-                .title(ticket.getTitle())
-                .status(ticket.getStatus())
-                .startDate(ticket.getStartDate())
-                .endDate(ticket.getEndDate())
-                .technologies(ticket.getTechnologies())
-                .build();
     }
 
 }

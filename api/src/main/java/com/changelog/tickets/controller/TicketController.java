@@ -1,6 +1,7 @@
 package com.changelog.tickets.controller;
 
 import com.changelog.tickets.dto.*;
+import com.changelog.tickets.model.TicketStatus;
 import com.changelog.tickets.service.TicketService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -29,7 +30,7 @@ public class TicketController {
         log.info("GET /api/v1/tickets status={}, pageable={}", status, pageable);
 
         TicketFilters filters = TicketFilters.builder()
-                .status(status)
+                .status(TicketStatus.valueOf(status))
                 .build();
 
         return ticketService.getTickets(filters, pageable);

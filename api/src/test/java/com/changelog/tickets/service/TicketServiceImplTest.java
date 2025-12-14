@@ -49,7 +49,7 @@ class TicketServiceImplTest {
     @Test
     void getTicketsWithStatusFilterUsesFindByStatusAndMapsPage() {
 
-        TicketFilters filters = new TicketFilters("ACTIVE");
+        TicketFilters filters = new TicketFilters(TicketStatus.ACTIVE);
         Pageable pageable = PageRequest.of(0, 10);
 
         Ticket ticket = Ticket.builder()
@@ -62,11 +62,11 @@ class TicketServiceImplTest {
 
         Page<Ticket> page = new PageImpl<>(List.of(ticket), pageable, 1);
 
-        when(ticketRepository.findByStatus("ACTIVE", pageable)).thenReturn(page);
+        when(ticketRepository.findByStatus(TicketStatus.ACTIVE, pageable)).thenReturn(page);
 
         TicketsPageResponse result = ticketService.getTickets(filters, pageable);
 
-        verify(ticketRepository).findByStatus("ACTIVE", pageable);
+        verify(ticketRepository).findByStatus(TicketStatus.ACTIVE, pageable);
 
         assertEquals(0, result.getPage());
         assertEquals(10, result.getSize());

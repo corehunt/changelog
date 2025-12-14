@@ -35,7 +35,7 @@ public class EntryServiceImpl implements EntryService {
         page = entryRepository.findAll(pageable);
 
         List<EntrySummaryResponse> summaries = page.getContent().stream()
-                .map(this::toSummary)
+                .map(entryMapper::toSummary)
                 .toList();
 
         return EntriesPageResponse.builder()
@@ -66,7 +66,7 @@ public class EntryServiceImpl implements EntryService {
 
         Entry savedEntry = entryRepository.save(entry);
 
-        return toSummary(savedEntry);
+        return entryMapper.toSummary(savedEntry);
     }
 
     @Override
@@ -91,15 +91,4 @@ public class EntryServiceImpl implements EntryService {
         entryRepository.delete(entry);
     }
 
-    private EntrySummaryResponse toSummary(Entry entry) {
-        return EntrySummaryResponse.builder()
-                .entryId(entry.getId())
-                .ticketName(entry.getTicket().getTitle())
-                .title(entry.getTitle())
-                .body(entry.getBody())
-                .technologies(entry.getTechnologies())
-                .date(entry.getDate())
-                .visibility(entry.getVisibility())
-                .build();
-    }
 }
