@@ -1,2 +1,12 @@
 /.next/trace
 /.next/trace-build
+/.idea/data_source_mapping.xml
+/.idea/dataSources.xml
+/.idea/encodings.xml
+/.idea/jarRepositories.xml
+/.idea/misc.xml
+/.idea/modules.xml
+/frontend/pnpm-lock.yaml
+/.idea/inspectionProfiles/Project_Default.xml
+/.idea/sqldialects.xml
+/.idea/vcs.xml
