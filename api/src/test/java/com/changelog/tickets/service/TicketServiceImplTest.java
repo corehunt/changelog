@@ -60,9 +60,16 @@ class TicketServiceImplTest {
                 .startDate(OffsetDateTime.parse("2025-12-10T14:30:00Z"))
                 .build();
 
+        TicketSummaryResponse mockSummary = TicketSummaryResponse.builder()
+                .id(1L)
+                .slug("refactor-reevaluation-processor")
+                .status(TicketStatus.ACTIVE)
+                .build();
+
         Page<Ticket> page = new PageImpl<>(List.of(ticket), pageable, 1);
 
         when(ticketRepository.findByStatus(TicketStatus.ACTIVE, pageable)).thenReturn(page);
+        when(ticketMapper.toSummary(any())).thenReturn(mockSummary);
 
         TicketsPageResponse result = ticketService.getTickets(filters, pageable);
 
@@ -97,6 +104,7 @@ class TicketServiceImplTest {
         Page<Ticket> page = new PageImpl<>(List.of(ticket), pageable, 1);
 
         when(ticketRepository.findAll(any(Pageable.class))).thenReturn(page);
+        when(ticketMapper.toSummary(any())).thenReturn(TicketSummaryResponse.builder().id(2L).build());
 
         TicketsPageResponse result = ticketService.getTickets(filters, pageable);
 
@@ -137,7 +145,15 @@ class TicketServiceImplTest {
                 .technologies(request.getTechnologies())
                 .build();
 
+
+        TicketSummaryResponse mockSummary = TicketSummaryResponse.builder()
+                .id(generatedId)
+                .slug("refactor-reevaluation-processor")
+                .status(TicketStatus.ACTIVE)
+                .build();
+
         when(ticketRepository.save(any(Ticket.class))).thenReturn(saved);
+        when(ticketMapper.toSummary(any())).thenReturn(mockSummary);
 
         TicketSummaryResponse result = ticketService.createTicket(request);
 
