@@ -11,6 +11,7 @@ export type DashboardMetrics = {
 export type EntrySummary = {
     entryId: number;
     ticketName: string;
+    ticketSlug: string;
     title: string;
     body: string;
     technologies: string[];

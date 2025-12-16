@@ -28,7 +28,8 @@ export default async function Home() {
   // --- Entries ---
   const recentEntries: Entry[] = dashboard.recentEntries.map((e) => ({
     id: String(e.entryId),
-    ticketId: e.ticketName, // used as lookup key
+    ticketName: e.ticketName,
+    ticketSlug: e.ticketSlug,
     date: e.date,
     title: e.title ?? undefined,
     body: e.body ?? undefined,

@@ -20,7 +20,7 @@ export function RecentLogStream({ entries, getTicketTitle, getTicketSlug }: Rece
 
       <div className="space-y-8">
         {entries.map((entry, index) => {
-          const ticketSlug = getTicketSlug(entry.ticketId);
+            const ticketSlug = entry.ticketSlug;
 
           const entryContent = (
             <>
@@ -39,7 +39,7 @@ export function RecentLogStream({ entries, getTicketTitle, getTicketSlug }: Rece
                   className="text-xs font-mono"
                   style={{ color: THEME.colors.text.muted }}
                 >
-                  {getTicketTitle(entry.ticketId)}
+                  {entry.ticketName}
                 </span>
               </div>
 

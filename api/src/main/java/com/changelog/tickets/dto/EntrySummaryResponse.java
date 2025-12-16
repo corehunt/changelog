@@ -10,6 +10,7 @@ import java.time.OffsetDateTime;
 public class EntrySummaryResponse {
     private Long entryId;
     private String ticketName;
+    private String ticketSlug;
     private String title;
     private String body;
     private String[] technologies;

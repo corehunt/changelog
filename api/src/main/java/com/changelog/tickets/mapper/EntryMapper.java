@@ -27,6 +27,7 @@ public class EntryMapper {
         return EntrySummaryResponse.builder()
                 .entryId(entry.getId())
                 .ticketName(entry.getTicket().getTitle())
+                .ticketSlug(entry.getTicket().getSlug())
                 .title(entry.getTitle())
                 .body(entry.getBody())
                 .technologies(entry.getTechnologies())

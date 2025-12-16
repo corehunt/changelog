@@ -17,7 +17,8 @@ export type Ticket = {
 
 export type Entry = {
   id: string;
-  ticketId: string;
+  ticketName: string;
+  ticketSlug: string;
   date: string;
   title?: string;
   body?: string;
