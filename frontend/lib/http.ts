@@ -31,6 +31,8 @@ export async function authedGet<T>(
             "Content-Type": "application/json",
             ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
+        //TODO come back to when ready to implement caching
+        cache: "no-store",
     });
 
     if (!res.ok) {
