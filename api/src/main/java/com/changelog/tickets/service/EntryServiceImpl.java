@@ -28,6 +28,7 @@ public class EntryServiceImpl implements EntryService {
     private final EntryMapper entryMapper;
 
     @Override
+    @Transactional
     public EntriesPageResponse getEntries(Pageable pageable) {
 
         Page<Entry> page;
