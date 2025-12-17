@@ -5,7 +5,8 @@
  * When disabled, all routes are accessible without authentication.
  */
 
-export const AUTH_ENABLED = true;
+// TODO combe back to enable when go live
+export const AUTH_ENABLED = false;
 
 // where we store the JWT from AuthResponse.accessToken
 export const TOKEN_STORAGE_KEY = 'changelog_token';

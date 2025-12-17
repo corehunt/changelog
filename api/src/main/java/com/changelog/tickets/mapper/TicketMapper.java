@@ -42,13 +42,4 @@ public class TicketMapper {
                 .technologies(ticket.getTechnologies())
                 .build();
     }
-
-    public List<TicketDetailResponse> toDetailResponses(List<Ticket> tickets) {
-        if (tickets == null) {
-            return List.of();
-        }
-        return tickets.stream()
-                .map(this::toDetailResponse)
-                .toList();
-    }
 }
