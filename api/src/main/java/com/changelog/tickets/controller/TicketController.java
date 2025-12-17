@@ -50,8 +50,14 @@ public class TicketController {
 
     @GetMapping("/{id}")
     public TicketDetailResponse getTicketById(@PathVariable Long id) {
-        log.info("GET /api/v1/tickets/{}", id);
+        log.info("GET id - /api/v1/tickets/{}", id);
         return ticketService.getTicketById(id);
+    }
+
+    @GetMapping("/slug/{slug}")
+    public TicketDetailResponse getTicketBySlug(@PathVariable String slug) {
+        log.info("GET slug - /api/v1/tickets/{}", slug);
+        return ticketService.getTicketBySlug(slug);
     }
 
     @PutMapping("/{id}")

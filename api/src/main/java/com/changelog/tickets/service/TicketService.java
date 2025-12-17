@@ -14,4 +14,6 @@ public interface TicketService {
     TicketDetailResponse updateTicket(Long id, UpdateTicketRequest request);
 
     void archiveTicket(Long id);
+
+    TicketDetailResponse getTicketBySlug(String slug);
 }

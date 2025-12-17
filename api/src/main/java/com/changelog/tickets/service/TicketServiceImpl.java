@@ -2,6 +2,7 @@ package com.changelog.tickets.service;
 
 import com.changelog.tickets.dto.*;
 import com.changelog.tickets.exception.TicketNotFoundException;
+import com.changelog.tickets.mapper.EntryMapper;
 import com.changelog.tickets.mapper.TicketMapper;
 import com.changelog.tickets.model.Ticket;
 import com.changelog.tickets.model.TicketStatus;
@@ -24,6 +25,7 @@ public class TicketServiceImpl implements TicketService {
     private final TicketRepository ticketRepository;
     private final TicketIdGenerator ticketIdGenerator;
     private final TicketMapper ticketMapper;
+    private final EntryMapper entryMapper;
 
     @Override
     public TicketsPageResponse getTickets(TicketFilters filters, Pageable pageable) {
@@ -117,6 +119,35 @@ public class TicketServiceImpl implements TicketService {
 
         ticket.setStatus(TicketStatus.ARCHIVED);
         ticketRepository.save(ticket);
+    }
+
+    @Override
+    @Transactional
+    public TicketDetailResponse getTicketBySlug(String slug) {
+
+        Ticket ticket = ticketRepository.findBySlug(slug).orElseThrow(() -> new TicketNotFoundException(slug));
+
+        List<EntrySummaryResponse> summaryResp =
+                ticket.getEntries()
+                        .stream()
+                        .map(entryMapper::toSummary)
+                        .toList();
+
+        return TicketDetailResponse.builder()
+                .id(ticket.getId())
+                .slug(ticket.getSlug())
+                .title(ticket.getTitle())
+                .status(ticket.getStatus())
+                .visibility(ticket.getVisibility())
+                .startDate(ticket.getStartDate())
+                .endDate(ticket.getEndDate())
+                .background(ticket.getBackground())
+                .technologies(ticket.getTechnologies())
+                .learned(ticket.getLearned())
+                .roadblocksSummary(ticket.getRoadblocksSummary())
+                .metricsSummary(ticket.getMetricsSummary())
+                .entries(summaryResp)
+                .build();
     }
 
 }

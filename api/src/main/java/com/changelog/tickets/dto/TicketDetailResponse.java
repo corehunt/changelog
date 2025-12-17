@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 
 import java.time.OffsetDateTime;
+import java.util.List;
 
 @Data
 @Builder
@@ -21,5 +22,6 @@ public class TicketDetailResponse {
     private String learned;
     private String roadblocksSummary;
     private String metricsSummary;
+    private List<EntrySummaryResponse> entries;
 
 }
