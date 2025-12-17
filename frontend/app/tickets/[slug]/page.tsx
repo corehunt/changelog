@@ -1,11 +1,10 @@
-import { notFound } from 'next/navigation';
-import { supabase } from '@/lib/supabase';
-import { TicketMetaPanel } from '@/components/TicketMetaPanel';
-import { SectionCard } from '@/components/SectionCard';
-import { EntryTimeline } from '@/components/EntryTimeline';
-import { PageHeader } from '@/components/PageHeader';
-import { THEME } from '@/lib/theme';
-import { Ticket, Entry } from '@/lib/types';
+import { notFound } from "next/navigation";
+import { TicketMetaPanel } from "@/components/TicketMetaPanel";
+import { SectionCard } from "@/components/SectionCard";
+import { EntryTimeline } from "@/components/EntryTimeline";
+import { PageHeader } from "@/components/PageHeader";
+import { THEME } from "@/lib/theme";
+import { getTicketDetailBySlug } from "@/lib/api/tickets";
 
 interface PageProps {
   params: {
@@ -13,61 +12,17 @@ interface PageProps {
   };
 }
 
-export const dynamic = 'force-dynamic';
-
-async function getTicketBySlug(slug: string): Promise<Ticket | null> {
-  const { data, error } = await supabase
-    .from('tickets')
-    .select('*')
-    .eq('slug', slug)
-    .maybeSingle();
-
-  if (error || !data) return null;
-
-  return {
-    id: data.id,
-    slug: data.slug,
-    title: data.title,
-    status: data.status,
-    startDate: data.start_date,
-    endDate: data.end_date,
-    background: data.background,
-    technologies: data.technologies,
-    isPublic: data.is_public,
-    learned: data.learned,
-    roadblocksSummary: data.roadblocks_summary,
-    metricsSummary: data.metrics_summary,
-  };
-}
-
-async function getEntries(ticketId: string): Promise<Entry[]> {
-  const { data, error } = await supabase
-    .from('entries')
-    .select('*')
-    .eq('ticket_id', ticketId)
-    .order('date', { ascending: true });
-
-  if (error || !data) return [];
-
-  return data.map((entry) => ({
-    id: entry.id,
-    ticketId: entry.ticket_id,
-    date: entry.date,
-    title: entry.title,
-    body: entry.body,
-    technologies: entry.technologies,
-    isPublic: entry.is_public,
-  }));
-}
+export const dynamic = "force-dynamic";
 
 export default async function TicketDetailPage({ params }: PageProps) {
-  const ticket = await getTicketBySlug(params.slug);
+  const ticketDetail = await getTicketDetailBySlug(params.slug);
 
-  if (!ticket) {
+  if (!ticketDetail) {
     notFound();
   }
 
-  const entries = await getEntries(ticket.id);
+  const ticket = ticketDetail;
+  const entries = ticketDetail.entries;
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
