@@ -1,8 +1,7 @@
 package com.changelog.tickets.controller;
 
 import com.changelog.auth.service.JwtService;
-import com.changelog.tickets.dto.TicketDetailResponse;
-import com.changelog.tickets.dto.UpdateTicketRequest;
+import com.changelog.tickets.dto.*;
 import com.changelog.tickets.model.TicketStatus;
 import com.changelog.tickets.service.TicketService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -15,16 +14,15 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.OffsetDateTime;
+import java.util.List;
 
 import static org.hamcrest.Matchers.is;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
-
 
 @WebMvcTest(TicketController.class)
 @WithMockUser
@@ -41,6 +39,74 @@ class TicketControllerTest {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @Test
+    void getTicketsReturnsTicketsPageResponse() throws Exception {
+
+        TicketSummaryResponse ticket = TicketSummaryResponse.builder()
+                .id(1L)
+                .slug("refactor-reevaluation-processor")
+                .title("Refactor reevaluation processor")
+                .status(TicketStatus.ACTIVE)
+                .startDate(OffsetDateTime.parse("2025-12-10T14:30:00Z"))
+                .build();
+
+        TicketsPageResponse response = TicketsPageResponse.builder()
+                .tickets(List.of(ticket))
+                .page(0)
+                .size(10)
+                .totalElements(1)
+                .totalPages(1)
+                .build();
+
+        when(ticketService.getTickets(any(TicketFilters.class), any())).thenReturn(response);
+
+        mockMvc.perform(get("/api/v1/tickets")
+                        .param("status", "ACTIVE")
+                        .param("page", "0")
+                        .param("size", "10")
+                        .with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.page", is(0)))
+                .andExpect(jsonPath("$.size", is(10)))
+                .andExpect(jsonPath("$.totalElements", is(1)))
+                .andExpect(jsonPath("$.totalPages", is(1)))
+                .andExpect(jsonPath("$.tickets[0].id", is(1)))
+                .andExpect(jsonPath("$.tickets[0].slug", is("refactor-reevaluation-processor")))
+                .andExpect(jsonPath("$.tickets[0].status", is("ACTIVE")));
+    }
+
+    @Test
+    void createTicketPostsAndReturnsCreatedTicketSummary() throws Exception {
+        CreateTicketRequest request = new CreateTicketRequest();
+        request.setSlug("refactor-reevaluation-processor");
+        request.setTitle("Refactor reevaluation processor");
+        request.setStatus(TicketStatus.ACTIVE);
+        request.setVisibility("Public");
+        request.setStartDate(OffsetDateTime.parse("2025-12-10T14:30:00Z"));
+        request.setEndDate(null);
+        request.setBackground("Background");
+        request.setTechnologies(new String[]{"Java", "Spring Boot"});
+
+        TicketSummaryResponse created = TicketSummaryResponse.builder()
+                .id(456530599L)
+                .slug(request.getSlug())
+                .title(request.getTitle())
+                .status(request.getStatus())
+                .startDate(request.getStartDate())
+                .build();
+
+        when(ticketService.createTicket(any(CreateTicketRequest.class))).thenReturn(created);
+
+        mockMvc.perform(post("/api/v1/tickets")
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id", is(456530599)))
+                .andExpect(jsonPath("$.slug", is("refactor-reevaluation-processor")))
+                .andExpect(jsonPath("$.status", is("ACTIVE")));
+    }
 
     @Test
     void getTicketByIdReturnsTicketDetail() throws Exception {
@@ -63,6 +129,43 @@ class TicketControllerTest {
                 .andExpect(jsonPath("$.id", is(id.intValue())))
                 .andExpect(jsonPath("$.slug", is("refactor-reevaluation-processor")))
                 .andExpect(jsonPath("$.status", is("ACTIVE")));
+    }
+
+    @Test
+    void getTicketBySlugReturnsTicketDetail() throws Exception {
+        String slug = "refactor-reevaluation-processor";
+
+        TicketDetailResponse response = TicketDetailResponse.builder()
+                .id(456530599L)
+                .slug(slug)
+                .title("Refactor reevaluation processor")
+                .status(TicketStatus.COMPLETED)
+                .visibility("Public")
+                .startDate(OffsetDateTime.parse("2025-12-10T14:30:00Z"))
+                .endDate(OffsetDateTime.parse("2025-12-12T18:00:00Z"))
+                .entries(List.of(
+                        EntrySummaryResponse.builder()
+                                .entryId(443682370L)
+                                .ticketName("Refactor reevaluation processor")
+                                .ticketSlug(slug)
+                                .title("Identified bottlenecks")
+                                .body("Found inefficient JPA queries.")
+                                .technologies(new String[]{"Spring Boot", "PostgreSQL"})
+                                .date(OffsetDateTime.parse("2025-12-10T17:30:00Z"))
+                                .visibility("Public")
+                                .build()
+                ))
+                .build();
+
+        when(ticketService.getTicketBySlug(slug)).thenReturn(response);
+
+        mockMvc.perform(get("/api/v1/tickets/slug/{slug}", slug)
+                        .with(csrf()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.slug", is("refactor-reevaluation-processor")))
+                .andExpect(jsonPath("$.status", is("COMPLETED")))
+                .andExpect(jsonPath("$.entries[0].entryId", is(443682370)))
+                .andExpect(jsonPath("$.entries[0].ticketSlug", is("refactor-reevaluation-processor")));
     }
 
     @Test

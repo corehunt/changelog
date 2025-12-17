@@ -1,13 +1,16 @@
 package com.changelog.tickets.service;
 
 import com.changelog.tickets.dto.CreateTicketRequest;
+import com.changelog.tickets.dto.EntrySummaryResponse;
 import com.changelog.tickets.dto.TicketDetailResponse;
 import com.changelog.tickets.dto.TicketFilters;
 import com.changelog.tickets.dto.TicketSummaryResponse;
 import com.changelog.tickets.dto.TicketsPageResponse;
 import com.changelog.tickets.dto.UpdateTicketRequest;
 import com.changelog.tickets.exception.TicketNotFoundException;
+import com.changelog.tickets.mapper.EntryMapper;
 import com.changelog.tickets.mapper.TicketMapper;
+import com.changelog.tickets.model.Entry;
 import com.changelog.tickets.model.Ticket;
 import com.changelog.tickets.model.TicketStatus;
 import com.changelog.tickets.repository.TicketRepository;
@@ -42,6 +45,9 @@ class TicketServiceImplTest {
 
     @Mock
     private TicketMapper ticketMapper;
+
+    @Mock
+    private EntryMapper entryMapper;
 
     @InjectMocks
     private TicketServiceImpl ticketService;
@@ -145,7 +151,6 @@ class TicketServiceImplTest {
                 .technologies(request.getTechnologies())
                 .build();
 
-
         TicketSummaryResponse mockSummary = TicketSummaryResponse.builder()
                 .id(generatedId)
                 .slug("refactor-reevaluation-processor")
@@ -214,6 +219,92 @@ class TicketServiceImplTest {
         when(ticketRepository.findById(id)).thenReturn(Optional.empty());
 
         assertThrows(TicketNotFoundException.class, () -> ticketService.getTicketById(id));
+    }
+
+    @Test
+    void getTicketBySlugReturnsDetailWithEntriesWhenTicketExists() {
+        String slug = "refactor-reevaluation-processor";
+
+        Entry entry1 = Entry.builder()
+                .id(443682370L)
+                .date(OffsetDateTime.parse("2025-12-10T17:30:00Z"))
+                .title("Identified bottlenecks")
+                .body("Found inefficient JPA queries.")
+                .technologies(new String[]{"Spring Boot", "PostgreSQL"})
+                .visibility("Public")
+                .build();
+
+        Entry entry2 = Entry.builder()
+                .id(443682371L)
+                .date(OffsetDateTime.parse("2025-12-11T15:00:00Z"))
+                .title("Implemented batching")
+                .body("Reduced DB calls.")
+                .technologies(new String[]{"Hibernate"})
+                .visibility("Public")
+                .build();
+
+        Ticket ticket = Ticket.builder()
+                .id(456530599L)
+                .slug(slug)
+                .title("Refactor reevaluation processor")
+                .status(TicketStatus.COMPLETED)
+                .visibility("Public")
+                .startDate(OffsetDateTime.parse("2025-12-10T14:30:00Z"))
+                .endDate(OffsetDateTime.parse("2025-12-12T18:00:00Z"))
+                .background("Background text")
+                .technologies(new String[]{"Java", "Spring Boot"})
+                .learned("Learned advanced batching strategies.")
+                .roadblocksSummary("Some roadblocks.")
+                .metricsSummary("Cut from 15m to 30s.")
+                .entries(List.of(entry1, entry2))
+                .build();
+
+        when(ticketRepository.findBySlug(slug)).thenReturn(Optional.of(ticket));
+
+        EntrySummaryResponse summary1 = EntrySummaryResponse.builder()
+                .entryId(443682370L)
+                .ticketName("Refactor reevaluation processor")
+                .ticketSlug(slug)
+                .title("Identified bottlenecks")
+                .visibility("Public")
+                .build();
+
+        EntrySummaryResponse summary2 = EntrySummaryResponse.builder()
+                .entryId(443682371L)
+                .ticketName("Refactor reevaluation processor")
+                .ticketSlug(slug)
+                .title("Implemented batching")
+                .visibility("Public")
+                .build();
+
+        when(entryMapper.toSummary(entry1)).thenReturn(summary1);
+        when(entryMapper.toSummary(entry2)).thenReturn(summary2);
+
+        TicketDetailResponse result = ticketService.getTicketBySlug(slug);
+
+        verify(ticketRepository).findBySlug(slug);
+        verify(entryMapper).toSummary(entry1);
+        verify(entryMapper).toSummary(entry2);
+
+        assertEquals(456530599L, result.getId());
+        assertEquals(slug, result.getSlug());
+        assertEquals(TicketStatus.COMPLETED, result.getStatus());
+        assertNotNull(result.getEntries());
+        assertEquals(2, result.getEntries().size());
+        assertEquals(443682370L, result.getEntries().get(0).getEntryId());
+        assertEquals(443682371L, result.getEntries().get(1).getEntryId());
+    }
+
+    @Test
+    void getTicketBySlugThrowsTicketNotFoundWhenMissing() {
+        String slug = "missing-ticket";
+
+        when(ticketRepository.findBySlug(slug)).thenReturn(Optional.empty());
+
+        assertThrows(TicketNotFoundException.class, () -> ticketService.getTicketBySlug(slug));
+
+        verify(ticketRepository).findBySlug(slug);
+        verifyNoInteractions(entryMapper);
     }
 
     @Test
