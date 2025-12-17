@@ -29,8 +29,13 @@ public class TicketController {
 
         log.info("GET /api/v1/tickets status={}, pageable={}", status, pageable);
 
+        TicketStatus parsedStatus = null;
+        if (status != null && !status.isBlank()) {
+            parsedStatus = TicketStatus.valueOf(status);
+        }
+
         TicketFilters filters = TicketFilters.builder()
-                .status(TicketStatus.valueOf(status))
+                .status(parsedStatus)
                 .build();
 
         return ticketService.getTickets(filters, pageable);

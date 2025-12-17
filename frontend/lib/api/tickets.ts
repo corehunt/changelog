@@ -29,6 +29,23 @@ type BackendTicketDetailResponse = {
   entries: BackendEntrySummaryResponse[];
 };
 
+type BackendTicketSummaryResponse = {
+  id: number;
+  slug: string;
+  title: string;
+  status: TicketStatus;
+  startDate: string;
+  endDate?: string | null;
+  technologies: string[];
+};
+
+type BackendTicketsPageResponse = {
+  tickets: BackendTicketSummaryResponse[];
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+};
 
 export type TicketDetail = Ticket & {
   entries: Entry[];
@@ -69,18 +86,63 @@ function mapBackendDetailToTicketDetail(dto: BackendTicketDetailResponse): Ticke
   };
 }
 
+function mapBackendSummaryToTicket(dto: BackendTicketSummaryResponse): Ticket {
+  return {
+    id: String(dto.id),
+    slug: dto.slug,
+    title: dto.title,
+    status: dto.status,
+    startDate: dto.startDate,
+    endDate: dto.endDate ?? undefined,
+    technologies: dto.technologies ?? [],
+    isPublic: true,
+  };
+}
+
 /**
  * Loads ticket + entries in ONE call:
  * GET /api/v1/tickets/slug/{slug}
  */
 export async function getTicketDetailBySlug(slug: string): Promise<TicketDetail | null> {
   try {
-    const dto = await authedGet<BackendTicketDetailResponse>(
-        `/api/v1/tickets/slug/${slug}`
-    );
+    const dto = await authedGet<BackendTicketDetailResponse>(`/api/v1/tickets/slug/${slug}`);
     return mapBackendDetailToTicketDetail(dto);
   } catch (e: any) {
     if (e?.status === 404) return null;
     throw e;
   }
+}
+
+/**
+ * Loads paged tickets:
+ * GET /api/v1/tickets?page={page}&size={size}
+ * Optionally: &status=ACTIVE|COMPLETED
+ */
+export async function getTicketsPage(args: {
+  page: number;
+  size: number;
+  status?: TicketStatus;
+}): Promise<{
+  tickets: Ticket[];
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+}> {
+  const params: Record<string, string> = {
+    page: String(args.page),
+    size: String(args.size),
+  };
+
+  if (args.status) params.status = args.status;
+
+  const dto = await authedGet<BackendTicketsPageResponse>("/api/v1/tickets", { params });
+
+  return {
+    tickets: (dto.tickets ?? []).map(mapBackendSummaryToTicket),
+    page: dto.page,
+    size: dto.size,
+    totalElements: dto.totalElements,
+    totalPages: dto.totalPages,
+  };
 }

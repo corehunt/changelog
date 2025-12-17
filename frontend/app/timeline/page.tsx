@@ -2,15 +2,15 @@
 
 import { useEffect, useState } from "react";
 import { PageHeader } from "@/components/PageHeader";
-import { EntryTimeline } from "@/components/EntryTimeline";
-import { getEntriesPage } from "@/lib/api/entries";
-import { Entry } from "@/lib/types";
+import { TicketTimeline } from "@/components/TicketTimeline";
+import { getTicketsPage } from "@/lib/api/tickets";
+import type { Ticket } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { THEME } from "@/lib/theme";
 
 export default function TimelinePage() {
-  const [entries, setEntries] = useState<Entry[]>([]);
+  const [tickets, setTickets] = useState<Ticket[]>([]);
   const [page, setPage] = useState(0);
   const [pageSize] = useState(10);
 
@@ -25,15 +25,16 @@ export default function TimelinePage() {
     async function load() {
       try {
         setLoading(true);
-        const res = await getEntriesPage({ page, size: pageSize });
+
+        const res = await getTicketsPage({ page, size: pageSize });
 
         if (cancelled) return;
 
-        setEntries(res.entries);
+        setTickets(res.tickets);
         setTotalElements(res.totalElements);
         setTotalPages(res.totalPages);
       } catch (err) {
-        console.error("Error loading entries:", err);
+        console.error("Error loading tickets:", err);
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -50,14 +51,14 @@ export default function TimelinePage() {
 
   return (
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
-        <PageHeader title="Timeline" subtitle="Chronological view of all work entries" />
+        <PageHeader title="Timeline" subtitle="Chronological view of shipped and active work" />
 
         {loading ? (
             <div className="py-12 text-center text-sm" style={{ color: THEME.colors.text.muted }}>
               Loading...
             </div>
         ) : (
-            <EntryTimeline entries={entries} showTicketTitle />
+            <TicketTimeline tickets={tickets} />
         )}
 
         {totalPages > 1 && (
@@ -69,7 +70,7 @@ export default function TimelinePage() {
                 }}
             >
               <div className="text-xs font-mono" style={{ color: THEME.colors.text.secondary }}>
-                page={page}  entries={totalElements}
+                page={page} tickets={totalElements}
               </div>
 
               <div className="flex gap-2">
