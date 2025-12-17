@@ -28,7 +28,7 @@ export const THEME = {
     },
     status: {
       active: '#10B981',
-      completed: '#737373',
+      completed: '#3b82f6',
       private: '#A1A1A1',
       public: '#10B981',
     },

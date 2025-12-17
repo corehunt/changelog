@@ -102,11 +102,15 @@ export default async function TicketDetailPage({ params }: PageProps) {
             </SectionCard>
           )}
 
-          <SectionCard title="Daily Timeline">
-            <EntryTimeline entries={entries} />
-          </SectionCard>
+            <SectionCard title="Daily Timeline">
+              <EntryTimeline
+                  entries={entries}
+                  ticketStatus={ticket.status}
+                  showTicketTitle={false}
+              />
+            </SectionCard>
+          </div>
         </div>
       </div>
-    </div>
   );
 }

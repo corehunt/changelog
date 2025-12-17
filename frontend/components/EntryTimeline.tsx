@@ -1,33 +1,40 @@
-import { Entry } from '@/lib/types';
-import { THEME } from '@/lib/theme';
-import { Calendar } from 'lucide-react';
-import Link from 'next/link';
+import { Entry, TicketStatus } from "@/lib/types";
+import { THEME } from "@/lib/theme";
+import { Calendar } from "lucide-react";
+import Link from "next/link";
 
 interface EntryTimelineProps {
     entries: Entry[];
     showTicketTitle?: boolean;
 
-    // legacy props (safe to keep for now, but no longer required)
+    ticketStatus?: TicketStatus;
+
+    // legacy props (safe to keep)
     getTicketTitle?: (ticketId: string) => string;
     getTicketSlug?: (ticketId: string) => string | undefined;
+}
+
+function getDotColor(ticketStatus?: TicketStatus) {
+    if (ticketStatus === "COMPLETED") return THEME.colors.status.completed;
+    return THEME.colors.accent.primary;
 }
 
 export function EntryTimeline({
                                   entries,
                                   showTicketTitle = false,
+                                  ticketStatus,
                                   getTicketTitle,
                                   getTicketSlug,
                               }: EntryTimelineProps) {
     if (entries.length === 0) {
         return (
-            <div
-                className="text-center py-12"
-                style={{ color: THEME.colors.text.muted }}
-            >
+            <div className="text-center py-12" style={{ color: THEME.colors.text.muted }}>
                 No entries yet
             </div>
         );
     }
+
+    const dotColor = getDotColor(ticketStatus);
 
     return (
         <div className="relative">
@@ -37,7 +44,7 @@ export function EntryTimeline({
             />
 
             <div className="space-y-6 md:space-y-8">
-                {entries.map((entry, index) => {
+                {entries.map((entry) => {
                     const ticketSlug = entry.ticketSlug || getTicketSlug?.(entry.ticketSlug);
 
                     const entryContent = (
@@ -112,9 +119,7 @@ export function EntryTimeline({
                         <div key={entry.id} className="relative pl-6 md:pl-8">
                             <div
                                 className="absolute left-0 w-2 h-2 rounded-full -translate-x-[3.5px] top-1/2 -translate-y-1/2"
-                                style={{
-                                    backgroundColor: THEME.colors.accent.primary,
-                                }}
+                                style={{ backgroundColor: dotColor }}
                             />
 
                             {ticketSlug ? (
