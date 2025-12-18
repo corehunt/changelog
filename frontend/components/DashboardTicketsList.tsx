@@ -528,14 +528,14 @@ export function DashboardTicketsList({
                   view
                 </Link>
                 <Link
-                  href={`/admin/tickets/${ticket.id}`}
+                  href={`/admin/tickets/${ticket.slug}`}
                   className="text-xs font-mono transition-colors hover:opacity-70"
                   style={{ color: THEME.colors.text.secondary }}
                 >
                   edit
                 </Link>
                 <Link
-                  href={`/admin/tickets/${ticket.id}/entries`}
+                  href={`/admin/tickets/${ticket.slug}/entries`}
                   className="text-xs font-mono transition-colors hover:opacity-70"
                   style={{ color: THEME.colors.text.secondary }}
                 >
