@@ -25,6 +25,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -53,9 +54,11 @@ class TicketServiceImplTest {
     private TicketServiceImpl ticketService;
 
     @Test
-    void getTicketsWithStatusFilterUsesFindByStatusAndMapsPage() {
+    void getTicketsWithStatusFilterUsesFindAllWithSpecAndMapsPage() {
 
-        TicketFilters filters = new TicketFilters(TicketStatus.ACTIVE);
+        TicketFilters filters = TicketFilters.builder()
+                .status(TicketStatus.ACTIVE)
+                .build();
         Pageable pageable = PageRequest.of(0, 10);
 
         Ticket ticket = Ticket.builder()
@@ -74,12 +77,12 @@ class TicketServiceImplTest {
 
         Page<Ticket> page = new PageImpl<>(List.of(ticket), pageable, 1);
 
-        when(ticketRepository.findByStatus(TicketStatus.ACTIVE, pageable)).thenReturn(page);
+        when(ticketRepository.findAll(any(Specification.class), any(Pageable.class))).thenReturn(page);
         when(ticketMapper.toSummary(any())).thenReturn(mockSummary);
 
         TicketsPageResponse result = ticketService.getTickets(filters, pageable);
 
-        verify(ticketRepository).findByStatus(TicketStatus.ACTIVE, pageable);
+        verify(ticketRepository).findAll(any(Specification.class), eq(pageable));
 
         assertEquals(0, result.getPage());
         assertEquals(10, result.getSize());
@@ -96,7 +99,7 @@ class TicketServiceImplTest {
     @Test
     void getTicketsWithoutStatusFilterUsesFindAll() {
 
-        TicketFilters filters = new TicketFilters(null);
+        TicketFilters filters = TicketFilters.builder().build();
         Pageable pageable = PageRequest.of(0, 5);
 
         Ticket ticket = Ticket.builder()
@@ -109,12 +112,12 @@ class TicketServiceImplTest {
 
         Page<Ticket> page = new PageImpl<>(List.of(ticket), pageable, 1);
 
-        when(ticketRepository.findAll(any(Pageable.class))).thenReturn(page);
+        when(ticketRepository.findAll(any(Specification.class), any(Pageable.class))).thenReturn(page);
         when(ticketMapper.toSummary(any())).thenReturn(TicketSummaryResponse.builder().id(2L).build());
 
         TicketsPageResponse result = ticketService.getTickets(filters, pageable);
 
-        verify(ticketRepository).findAll(pageable);
+        verify(ticketRepository).findAll(any(Specification.class), eq(pageable));
 
         assertEquals(0, result.getPage());
         assertEquals(5, result.getSize());

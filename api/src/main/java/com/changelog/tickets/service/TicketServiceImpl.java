@@ -7,6 +7,7 @@ import com.changelog.tickets.mapper.TicketMapper;
 import com.changelog.tickets.model.Ticket;
 import com.changelog.tickets.model.TicketStatus;
 import com.changelog.tickets.repository.TicketRepository;
+import com.changelog.tickets.repository.TicketSpecifications;
 import com.changelog.tickets.util.TicketIdGenerator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,13 +31,9 @@ public class TicketServiceImpl implements TicketService {
     @Override
     public TicketsPageResponse getTickets(TicketFilters filters, Pageable pageable) {
 
-        Page<Ticket> page;
+        var spec = TicketSpecifications.fromFilters(filters);
 
-        if (filters.getStatus() != null) {
-            page = ticketRepository.findByStatus(filters.getStatus(), pageable);
-        } else {
-            page = ticketRepository.findAll(pageable);
-        }
+        Page<Ticket> page = ticketRepository.findAll(spec, pageable);
 
         List<TicketSummaryResponse> summaries = page.getContent().stream()
                 .map(ticketMapper::toSummary)

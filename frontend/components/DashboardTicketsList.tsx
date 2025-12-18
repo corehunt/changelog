@@ -278,11 +278,12 @@ export function DashboardTicketsList({
                       : 'private'
                   }
                   onValueChange={(value) =>
-                    onFiltersChange({
-                      ...filters,
-                      isPublic:
-                        value === 'all' ? undefined : value === 'public',
-                    })
+                      onFiltersChange({
+                        ...filters,
+                        visibility:
+                            value === "all" ? undefined : value === "public" ? "Public" : "Private",
+                        isPublic: undefined,
+                      })
                   }
                 >
                   <SelectTrigger>

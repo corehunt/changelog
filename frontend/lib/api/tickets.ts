@@ -122,6 +122,9 @@ export async function getTicketsPage(args: {
   page: number;
   size: number;
   status?: TicketStatus;
+  statusNot?: TicketStatus;
+  visibility?: "Public" | "Private";
+  sort?: string;
 }): Promise<{
   tickets: Ticket[];
   page: number;
@@ -135,6 +138,9 @@ export async function getTicketsPage(args: {
   };
 
   if (args.status) params.status = args.status;
+  if (args.statusNot) params.statusNot = args.statusNot;
+  if (args.visibility) params.visibility = args.visibility;
+  if (args.sort) params.sort = args.sort;
 
   const dto = await authedGet<BackendTicketsPageResponse>("/api/v1/tickets", { params });
 
@@ -147,9 +153,17 @@ export async function getTicketsPage(args: {
   };
 }
 
-export interface TicketFilters {
+export type TicketFilters = {
   status?: TicketStatus;
-}
+  statusNot?: TicketStatus;
+  // backend expects "Public" | "Private"
+  visibility?: "Public" | "Private";
+  // keep search later
+  search?: string;
+  // TEMP: keep existing boolean so you don’t have to refactor UI immediately
+  isPublic?: boolean;
+};
+
 
 export interface TicketSort {
   field: "title" | "start_date" | "status" | "created_at";
@@ -178,16 +192,35 @@ export async function getTickets(
     sort?: TicketSort,
     pagination?: PaginationParams
 ): Promise<TicketsResponse> {
-
-  void sort;
-
   const page = pagination?.page ?? 0;
   const pageSize = pagination?.pageSize ?? 10;
+
+  // UI -> backend entity property mapping
+  const sortFieldMap: Record<TicketSort["field"], string> = {
+    start_date: "startDate",
+    title: "title",
+    status: "status",
+    created_at: "createdAt",
+  };
+
+  const sortParam = sort
+      ? `${sortFieldMap[sort.field] ?? "startDate"},${sort.direction}`
+      : undefined;
+
+  const visibilityFromBool =
+      filters?.isPublic === undefined
+          ? undefined
+          : filters.isPublic
+              ? "Public"
+              : "Private";
 
   const res = await getTicketsPage({
     page,
     size: pageSize,
     status: filters?.status,
+    statusNot: filters?.statusNot,
+    visibility: filters?.visibility ?? visibilityFromBool,
+    sort: sortParam,
   });
 
   return {

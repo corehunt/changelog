@@ -25,17 +25,28 @@ public class TicketController {
     @GetMapping
     public TicketsPageResponse getTickets(
             @RequestParam(required = false) String status,
-            @PageableDefault(page = 0, size = 10, sort = "startDate", direction = Sort.Direction.DESC) Pageable pageable) {
+            @RequestParam(required = false) String statusNot,
+            @RequestParam(required = false) String visibility,
+            @PageableDefault(page = 0, size = 10, sort = "startDate", direction = Sort.Direction.DESC) Pageable pageable
+    ) {
 
-        log.info("GET /api/v1/tickets status={}, pageable={}", status, pageable);
+        log.info("GET /api/v1/tickets status={}, statusNot={}, visibility={}, pageable={}",
+                status, statusNot, visibility, pageable);
 
         TicketStatus parsedStatus = null;
         if (status != null && !status.isBlank()) {
             parsedStatus = TicketStatus.valueOf(status);
         }
 
+        TicketStatus parsedStatusNot = null;
+        if (statusNot != null && !statusNot.isBlank()) {
+            parsedStatusNot = TicketStatus.valueOf(statusNot);
+        }
+
         TicketFilters filters = TicketFilters.builder()
                 .status(parsedStatus)
+                .statusNot(parsedStatusNot)
+                .visibility(visibility)
                 .build();
 
         return ticketService.getTickets(filters, pageable);
