@@ -125,6 +125,7 @@ export async function getTicketsPage(args: {
   statusNot?: TicketStatus;
   visibility?: "Public" | "Private";
   sort?: string;
+  search?: string;
 }): Promise<{
   tickets: Ticket[];
   page: number;
@@ -141,6 +142,7 @@ export async function getTicketsPage(args: {
   if (args.statusNot) params.statusNot = args.statusNot;
   if (args.visibility) params.visibility = args.visibility;
   if (args.sort) params.sort = args.sort;
+  if (args.search) params.search = args.search;
 
   const dto = await authedGet<BackendTicketsPageResponse>("/api/v1/tickets", { params });
 
@@ -221,6 +223,7 @@ export async function getTickets(
     statusNot: filters?.statusNot,
     visibility: filters?.visibility ?? visibilityFromBool,
     sort: sortParam,
+    search: filters?.search,
   });
 
   return {

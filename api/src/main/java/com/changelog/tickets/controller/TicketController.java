@@ -27,11 +27,12 @@ public class TicketController {
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String statusNot,
             @RequestParam(required = false) String visibility,
+            @RequestParam(required = false) String search,
             @PageableDefault(page = 0, size = 10, sort = "startDate", direction = Sort.Direction.DESC) Pageable pageable
     ) {
 
-        log.info("GET /api/v1/tickets status={}, statusNot={}, visibility={}, pageable={}",
-                status, statusNot, visibility, pageable);
+        log.info("GET /api/v1/tickets status={}, statusNot={}, visibility={}, pageable={}, search={}",
+                status, statusNot, visibility, pageable, search);
 
         TicketStatus parsedStatus = null;
         if (status != null && !status.isBlank()) {
@@ -47,6 +48,7 @@ public class TicketController {
                 .status(parsedStatus)
                 .statusNot(parsedStatusNot)
                 .visibility(visibility)
+                .search(search)
                 .build();
 
         return ticketService.getTickets(filters, pageable);

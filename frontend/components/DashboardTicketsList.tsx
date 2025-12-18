@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { THEME } from '@/lib/theme';
 import { Ticket, TicketStatus } from '@/lib/types';
@@ -60,6 +60,10 @@ export function DashboardTicketsList({
   const [showFilters, setShowFilters] = useState(false);
   const [searchInput, setSearchInput] = useState(filters.search || '');
   const [bulkActionLoading, setBulkActionLoading] = useState(false);
+
+  useEffect(() => {
+    setSearchInput(filters.search || '');
+  }, [filters.search]);
 
   const totalPages = Math.ceil(total / pageSize);
   const allSelected = tickets.length > 0 && selectedIds.size === tickets.length;

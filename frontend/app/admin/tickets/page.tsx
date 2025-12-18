@@ -8,6 +8,12 @@ import { Ticket } from '@/lib/types';
 import { ProtectedRoute } from '@/lib/auth/ProtectedRoute';
 import { AUTH_ENABLED } from '@/lib/auth/config';
 
+const DEFAULT_FILTERS: TicketFilters = {};
+const DEFAULT_SORT: TicketSort = {
+  field: 'start_date',
+  direction: 'desc',
+};
+
 export default function ManageTicketsPage() {
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [total, setTotal] = useState(0);
@@ -17,11 +23,8 @@ export default function ManageTicketsPage() {
 
   const [loading, setLoading] = useState(true);
 
-  const [filters, setFilters] = useState<TicketFilters>({});
-  const [sort, setSort] = useState<TicketSort>({
-    field: 'start_date',
-    direction: 'desc',
-  });
+  const [filters, setFilters] = useState<TicketFilters>(DEFAULT_FILTERS);
+  const [sort, setSort] = useState<TicketSort>(DEFAULT_SORT);
 
   useEffect(() => {
     let cancelled = false;
@@ -49,17 +52,20 @@ export default function ManageTicketsPage() {
     };
   }, [filters, sort, page, pageSize]);
 
+  // Reset the view back to initial load state (page 0, default filters, default sort)
   const handleRefresh = () => {
-    setPage((p) => p);
+    setPage(0);
+    setFilters(DEFAULT_FILTERS);
+    setSort(DEFAULT_SORT);
   };
 
   return (
-    <ProtectedRoute enabled={AUTH_ENABLED}>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
-        <PageHeader
-          title="Manage Tickets"
-          subtitle="View, filter, and manage all tickets in the system."
-        />
+      <ProtectedRoute enabled={AUTH_ENABLED}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
+          <PageHeader
+              title="Manage Tickets"
+              subtitle="View, filter, and manage all tickets in the system."
+          />
 
           <DashboardTicketsList
               tickets={tickets}
@@ -79,6 +85,7 @@ export default function ManageTicketsPage() {
               }}
               onPageChange={setPage}
               onRefresh={handleRefresh}
+              defaultFilters={DEFAULT_FILTERS}
           />
         </div>
       </ProtectedRoute>

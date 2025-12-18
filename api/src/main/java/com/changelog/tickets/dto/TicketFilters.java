@@ -14,4 +14,5 @@ public class TicketFilters {
     private TicketStatus status;
     private TicketStatus statusNot;
     private String visibility;
+    private String search;
 }
