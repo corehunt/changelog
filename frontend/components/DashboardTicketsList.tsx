@@ -96,6 +96,13 @@ export function DashboardTicketsList({
     onFiltersChange(defaultFilters);
   };
 
+  const handleResetView = () => {
+    setSelectedIds(new Set());
+    setShowFilters(false);
+    setSearchInput('');
+    onRefresh();
+  };
+
   const handleBulkStatusChange = async (status: TicketStatus) => {
     if (selectedIds.size === 0) return;
     try {
@@ -205,7 +212,7 @@ export function DashboardTicketsList({
             <Button
               size="sm"
               variant="outline"
-              onClick={onRefresh}
+              onClick={handleResetView}
               disabled={loading}
               style={{
                 borderColor: THEME.colors.border.subtle,
