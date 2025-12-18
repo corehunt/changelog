@@ -146,3 +146,55 @@ export async function getTicketsPage(args: {
     totalPages: dto.totalPages,
   };
 }
+
+export interface TicketFilters {
+  status?: TicketStatus;
+}
+
+export interface TicketSort {
+  field: "title" | "start_date" | "status" | "created_at";
+  direction: "asc" | "desc";
+}
+
+export interface PaginationParams {
+  page: number;
+  pageSize: number;
+}
+
+export interface TicketsResponse {
+  tickets: Ticket[];
+  total: number;
+  page: number;
+  pageSize: number;
+  totalPages: number;
+}
+
+/**
+ * Admin-friendly wrapper used by ManageTicketsPage.
+ * Delegates to getTicketsPage() and reshapes the response.
+ */
+export async function getTickets(
+    filters?: TicketFilters,
+    sort?: TicketSort,
+    pagination?: PaginationParams
+): Promise<TicketsResponse> {
+
+  void sort;
+
+  const page = pagination?.page ?? 0;
+  const pageSize = pagination?.pageSize ?? 10;
+
+  const res = await getTicketsPage({
+    page,
+    size: pageSize,
+    status: filters?.status,
+  });
+
+  return {
+    tickets: res.tickets,
+    total: res.totalElements,
+    page: res.page,
+    pageSize: res.size,
+    totalPages: res.totalPages,
+  };
+}

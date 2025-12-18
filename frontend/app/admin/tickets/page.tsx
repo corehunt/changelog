@@ -11,8 +11,10 @@ import { AUTH_ENABLED } from '@/lib/auth/config';
 export default function ManageTicketsPage() {
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [total, setTotal] = useState(0);
-  const [page, setPage] = useState(1);
+
+  const [page, setPage] = useState(0);
   const [pageSize] = useState(10);
+
   const [loading, setLoading] = useState(true);
 
   const [filters, setFilters] = useState<TicketFilters>({});
@@ -22,24 +24,33 @@ export default function ManageTicketsPage() {
   });
 
   useEffect(() => {
-    loadTickets();
-  }, [filters, sort, page]);
+    let cancelled = false;
 
-  async function loadTickets() {
-    try {
-      setLoading(true);
-      const response = await getTickets(filters, sort, { page, pageSize });
-      setTickets(response.tickets);
-      setTotal(response.total);
-    } catch (error) {
-      console.error('Error loading tickets:', error);
-    } finally {
-      setLoading(false);
+    async function loadTickets() {
+      try {
+        setLoading(true);
+
+        const response = await getTickets(filters, sort, { page, pageSize });
+
+        if (cancelled) return;
+
+        setTickets(response.tickets);
+        setTotal(response.total);
+      } catch (error) {
+        console.error('Error loading tickets:', error);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
     }
-  }
+
+    loadTickets();
+    return () => {
+      cancelled = true;
+    };
+  }, [filters, sort, page, pageSize]);
 
   const handleRefresh = () => {
-    loadTickets();
+    setPage((p) => p);
   };
 
   return (
@@ -50,20 +61,26 @@ export default function ManageTicketsPage() {
           subtitle="View, filter, and manage all tickets in the system."
         />
 
-        <DashboardTicketsList
-          tickets={tickets}
-          total={total}
-          page={page}
-          pageSize={pageSize}
-          loading={loading}
-          filters={filters}
-          sort={sort}
-          onFiltersChange={setFilters}
-          onSortChange={setSort}
-          onPageChange={setPage}
-          onRefresh={handleRefresh}
-        />
-      </div>
-    </ProtectedRoute>
+          <DashboardTicketsList
+              tickets={tickets}
+              total={total}
+              page={page}
+              pageSize={pageSize}
+              loading={loading}
+              filters={filters}
+              sort={sort}
+              onFiltersChange={(next) => {
+                setPage(0);
+                setFilters(next);
+              }}
+              onSortChange={(next) => {
+                setPage(0);
+                setSort(next);
+              }}
+              onPageChange={setPage}
+              onRefresh={handleRefresh}
+          />
+        </div>
+      </ProtectedRoute>
   );
 }

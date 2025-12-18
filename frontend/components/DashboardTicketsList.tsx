@@ -536,46 +536,48 @@ export function DashboardTicketsList({
       </div>
 
       {totalPages > 1 && (
-        <div
-          className="mt-6 flex items-center justify-between"
-          style={{
-            paddingTop: '1rem',
-            borderTop: `1px solid ${THEME.colors.border.hairline}`,
-          }}
-        >
           <div
-            className="text-xs font-mono"
-            style={{ color: THEME.colors.text.secondary }}
+              className="mt-6 flex items-center justify-between"
+              style={{
+                paddingTop: '1rem',
+                borderTop: `1px solid ${THEME.colors.border.hairline}`,
+              }}
           >
-            Page {page} of {totalPages} ({total} total)
-          </div>
-          <div className="flex gap-2">
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => onPageChange(page - 1)}
-              disabled={page === 1 || loading}
-              style={{
-                borderColor: THEME.colors.border.subtle,
-                color: THEME.colors.text.secondary,
-              }}
+            <div
+                className="text-xs font-mono"
+                style={{ color: THEME.colors.text.secondary }}
             >
-              <ChevronLeft size={14} />
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => onPageChange(page + 1)}
-              disabled={page === totalPages || loading}
-              style={{
-                borderColor: THEME.colors.border.subtle,
-                color: THEME.colors.text.secondary,
-              }}
-            >
-              <ChevronRight size={14} />
-            </Button>
+              page={page} tickets={total}
+            </div>
+
+            <div className="flex gap-2">
+              <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => onPageChange(Math.max(0, page - 1))}
+                  disabled={page <= 0 || loading}
+                  style={{
+                    borderColor: THEME.colors.border.subtle,
+                    color: THEME.colors.text.secondary,
+                  }}
+              >
+                <ChevronLeft size={14} />
+              </Button>
+
+              <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => onPageChange(page + 1)}
+                  disabled={page + 1 >= totalPages || loading}
+                  style={{
+                    borderColor: THEME.colors.border.subtle,
+                    color: THEME.colors.text.secondary,
+                  }}
+              >
+                <ChevronRight size={14} />
+              </Button>
+            </div>
           </div>
-        </div>
       )}
     </div>
   );
