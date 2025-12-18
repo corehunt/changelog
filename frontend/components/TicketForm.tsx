@@ -1,18 +1,139 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { TechnologySelector } from '@/components/TechnologySelector';
 import { THEME } from '@/lib/theme';
-import { Ticket } from '@/lib/types';
+import { Ticket, TicketStatus } from '@/lib/types';
+import { updateTicket } from '@/lib/api/tickets';
 
 interface TicketFormProps {
     ticket?: Ticket;
 }
 
+function toDateInputValue(value?: string | null): string {
+    if (!value) return '';
+    return value.length >= 10 ? value.slice(0, 10) : value;
+}
+
+function dateInputToIso(value?: string): string | null {
+    if (!value) return null;
+    return new Date(`${value}T00:00:00.000Z`).toISOString();
+}
+
 export function TicketForm({ ticket }: TicketFormProps) {
-    const [selectedTechnologies, setSelectedTechnologies] = useState<string[]>(
-        ticket?.technologies || []
+    const [title, setTitle] = useState(ticket?.title ?? '');
+    const [slug, setSlug] = useState(ticket?.slug ?? '');
+    const [status, setStatus] = useState<TicketStatus>(ticket?.status ?? 'ACTIVE');
+
+    const initialVisibilityUi = ticket?.isPublic === false ? 'private' : 'public';
+    const [visibilityUi, setVisibilityUi] = useState<'public' | 'private'>(initialVisibilityUi);
+
+    const [startDate, setStartDate] = useState<string>(
+        toDateInputValue(ticket?.startDate ?? '')
     );
+    const [endDate, setEndDate] = useState<string>(
+        toDateInputValue(ticket?.endDate ?? '')
+    );
+
+    const [background, setBackground] = useState(ticket?.background ?? '');
+    const [learned, setLearned] = useState(ticket?.learned ?? '');
+    const [roadblocksSummary, setRoadblocksSummary] = useState(
+        ticket?.roadblocksSummary ?? ''
+    );
+    const [metricsSummary, setMetricsSummary] = useState(
+        ticket?.metricsSummary ?? ''
+    );
+
+    const [selectedTechnologies, setSelectedTechnologies] = useState<string[]>(
+        ticket?.technologies ?? []
+    );
+
+    const [saving, setSaving] = useState(false);
+    const [saveError, setSaveError] = useState<string | null>(null);
+    const [saveOk, setSaveOk] = useState(false);
+    const [showNotice, setShowNotice] = useState(false);
+
+    useEffect(() => {
+        if (!saveOk) return;
+
+        setShowNotice(true);
+
+        const hide = setTimeout(() => setShowNotice(false), 2200);
+        const clear = setTimeout(() => setSaveOk(false), 2450);
+
+        return () => {
+            clearTimeout(hide);
+            clearTimeout(clear);
+        };
+    }, [saveOk]);
+
+    useEffect(() => {
+        if (!saveOk && !showNotice) return;
+        setShowNotice(false);
+        setSaveOk(false);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [
+        title,
+        slug,
+        status,
+        visibilityUi,
+        startDate,
+        endDate,
+        background,
+        learned,
+        roadblocksSummary,
+        metricsSummary,
+        selectedTechnologies,
+    ]);
+
+    const canSave = useMemo(() => {
+        if (!ticket?.id) return false;
+        if (!title.trim()) return false;
+        if (!slug.trim()) return false;
+        if (!startDate) return false;
+        return true;
+    }, [ticket?.id, title, slug, startDate]);
+
+    const handleSave = async () => {
+        if (!ticket?.id) return;
+
+        setSaving(true);
+        setSaveError(null);
+        setSaveOk(false);
+        setShowNotice(false);
+
+        try {
+            await updateTicket({
+                id: ticket.id,
+                request: {
+                    slug: slug.trim(),
+                    title: title.trim(),
+                    status,
+                    visibility: visibilityUi === 'public' ? 'Public' : 'Private',
+                    startDate: dateInputToIso(startDate)!,
+                    endDate: endDate ? dateInputToIso(endDate) : null,
+                    background: background || null,
+                    technologies: selectedTechnologies,
+                    learned: learned || null,
+                    roadblocksSummary: roadblocksSummary || null,
+                    metricsSummary: metricsSummary || null,
+                },
+            });
+
+            setSaveOk(true);
+        } catch (err: any) {
+            setSaveError(err?.message ?? 'Failed to save changes');
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    const inputStyle = {
+        backgroundColor: THEME.colors.surface.elevated,
+        color: THEME.colors.text.primary,
+        border: `1px solid ${THEME.colors.border.subtle}`,
+        borderRadius: THEME.borderRadius.input,
+    } as const;
 
     return (
         <div className="space-y-6">
@@ -25,7 +146,8 @@ export function TicketForm({ ticket }: TicketFormProps) {
                 </label>
                 <input
                     type="text"
-                    defaultValue={ticket?.title}
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
                     placeholder="Enter ticket title"
                     className="w-full px-4 py-3 text-sm"
                     style={{
@@ -46,7 +168,8 @@ export function TicketForm({ ticket }: TicketFormProps) {
                 </label>
                 <input
                     type="text"
-                    defaultValue={ticket?.slug}
+                    value={slug}
+                    onChange={(e) => setSlug(e.target.value)}
                     placeholder="url-friendly-slug"
                     className="w-full px-4 py-3 text-sm"
                     style={{
@@ -67,7 +190,8 @@ export function TicketForm({ ticket }: TicketFormProps) {
                         Status
                     </label>
                     <select
-                        defaultValue={ticket?.status || 'ACTIVE'}
+                        value={status}
+                        onChange={(e) => setStatus(e.target.value as TicketStatus)}
                         className="w-full px-4 py-3 text-sm"
                         style={{
                             backgroundColor: THEME.colors.surface.elevated,
@@ -78,6 +202,7 @@ export function TicketForm({ ticket }: TicketFormProps) {
                     >
                         <option value="ACTIVE">ACTIVE</option>
                         <option value="COMPLETED">COMPLETED</option>
+                        <option value="ARCHIVED">ARCHIVED</option>
                     </select>
                 </div>
 
@@ -89,7 +214,8 @@ export function TicketForm({ ticket }: TicketFormProps) {
                         Visibility
                     </label>
                     <select
-                        defaultValue={ticket?.isPublic === false ? 'private' : 'public'}
+                        value={visibilityUi}
+                        onChange={(e) => setVisibilityUi(e.target.value as 'public' | 'private')}
                         className="w-full px-4 py-3 text-sm"
                         style={{
                             backgroundColor: THEME.colors.surface.elevated,
@@ -114,7 +240,8 @@ export function TicketForm({ ticket }: TicketFormProps) {
                     </label>
                     <input
                         type="date"
-                        defaultValue={ticket?.startDate}
+                        value={startDate}
+                        onChange={(e) => setStartDate(e.target.value)}
                         className="w-full px-4 py-3 text-sm"
                         style={{
                             backgroundColor: THEME.colors.surface.elevated,
@@ -134,7 +261,8 @@ export function TicketForm({ ticket }: TicketFormProps) {
                     </label>
                     <input
                         type="date"
-                        defaultValue={ticket?.endDate || ''}
+                        value={endDate}
+                        onChange={(e) => setEndDate(e.target.value)}
                         className="w-full px-4 py-3 text-sm"
                         style={{
                             backgroundColor: THEME.colors.surface.elevated,
@@ -154,7 +282,8 @@ export function TicketForm({ ticket }: TicketFormProps) {
                     Background
                 </label>
                 <textarea
-                    defaultValue={ticket?.background}
+                    value={background}
+                    onChange={(e) => setBackground(e.target.value)}
                     placeholder="Describe the project background and context"
                     rows={4}
                     className="w-full px-4 py-3 text-sm"
@@ -174,10 +303,7 @@ export function TicketForm({ ticket }: TicketFormProps) {
                 >
                     Technologies
                 </label>
-                <TechnologySelector
-                    selectedTechnologies={selectedTechnologies}
-                    onChange={setSelectedTechnologies}
-                />
+                <TechnologySelector selectedTechnologies={selectedTechnologies} onChange={setSelectedTechnologies} />
             </div>
 
             <div>
@@ -188,7 +314,8 @@ export function TicketForm({ ticket }: TicketFormProps) {
                     What I Learned
                 </label>
                 <textarea
-                    defaultValue={ticket?.learned || ''}
+                    value={learned}
+                    onChange={(e) => setLearned(e.target.value)}
                     placeholder="Key learnings and insights from this ticket"
                     rows={3}
                     className="w-full px-4 py-3 text-sm"
@@ -209,7 +336,8 @@ export function TicketForm({ ticket }: TicketFormProps) {
                     Roadblocks Summary
                 </label>
                 <textarea
-                    defaultValue={ticket?.roadblocksSummary || ''}
+                    value={roadblocksSummary}
+                    onChange={(e) => setRoadblocksSummary(e.target.value)}
                     placeholder="Challenges and obstacles encountered"
                     rows={3}
                     className="w-full px-4 py-3 text-sm"
@@ -230,7 +358,8 @@ export function TicketForm({ ticket }: TicketFormProps) {
                     Metrics Summary
                 </label>
                 <textarea
-                    defaultValue={ticket?.metricsSummary || ''}
+                    value={metricsSummary}
+                    onChange={(e) => setMetricsSummary(e.target.value)}
                     placeholder="Performance metrics and measurements"
                     rows={2}
                     className="w-full px-4 py-3 text-sm"
@@ -241,6 +370,36 @@ export function TicketForm({ ticket }: TicketFormProps) {
                         borderRadius: THEME.borderRadius.input,
                     }}
                 />
+            </div>
+            <div className="flex items-center justify-end gap-3 pt-2">
+                <div
+                    className="inline-flex items-center gap-2 px-2 py-1 text-xs font-mono"
+                    style={{
+                        backgroundColor: THEME.colors.surface.elevated,
+                        borderLeft: `2px solid ${THEME.colors.border.subtle}`,
+                        borderRadius: 6,
+                        color: saveError ? THEME.colors.text.primary : THEME.colors.status.active,
+                        opacity: showNotice || !!saveError ? 0.95 : 0,
+                        transform: showNotice || !!saveError ? 'translateY(0px)' : 'translateY(4px)',
+                        transition: 'opacity 180ms ease, transform 180ms ease',
+                        pointerEvents: showNotice || !!saveError ? 'auto' : 'none',
+                    }}
+                >
+                    {saveError ? `error` : '✓ saved'}
+                </div>
+
+                <button
+                    onClick={handleSave}
+                    disabled={!canSave || saving}
+                    className="px-6 py-3 text-sm transition-opacity hover:opacity-70 disabled:opacity-50"
+                    style={{
+                        backgroundColor: THEME.colors.surface.elevated,
+                        color: THEME.colors.text.primary,
+                        border: `1px solid ${THEME.colors.border.subtle}`,
+                    }}
+                >
+                    {saving ? 'Saving…' : 'Save changes'}
+                </button>
             </div>
         </div>
     );

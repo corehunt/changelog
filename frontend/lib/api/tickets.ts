@@ -1,5 +1,5 @@
 // frontend/lib/api/tickets.ts
-import { authedGet } from "../http";
+import { authedGet, authedPut } from "../http";
 import type { Entry, Ticket, TicketStatus } from "../types";
 
 type BackendEntrySummaryResponse = {
@@ -116,7 +116,6 @@ export async function getTicketDetailBySlug(slug: string): Promise<TicketDetail 
 /**
  * Loads paged tickets:
  * GET /api/v1/tickets?page={page}&size={size}
- * Optionally: &status=ACTIVE|COMPLETED
  */
 export async function getTicketsPage(args: {
   page: number;
@@ -158,14 +157,10 @@ export async function getTicketsPage(args: {
 export type TicketFilters = {
   status?: TicketStatus;
   statusNot?: TicketStatus;
-  // backend expects "Public" | "Private"
   visibility?: "Public" | "Private";
-  // keep search later
   search?: string;
-  // TEMP: keep existing boolean so you don’t have to refactor UI immediately
   isPublic?: boolean;
 };
-
 
 export interface TicketSort {
   field: "title" | "start_date" | "status" | "created_at";
@@ -187,7 +182,6 @@ export interface TicketsResponse {
 
 /**
  * Admin-friendly wrapper used by ManageTicketsPage.
- * Delegates to getTicketsPage() and reshapes the response.
  */
 export async function getTickets(
     filters?: TicketFilters,
@@ -197,7 +191,6 @@ export async function getTickets(
   const page = pagination?.page ?? 0;
   const pageSize = pagination?.pageSize ?? 10;
 
-  // UI -> backend entity property mapping
   const sortFieldMap: Record<TicketSort["field"], string> = {
     start_date: "startDate",
     title: "title",
@@ -233,4 +226,31 @@ export async function getTickets(
     pageSize: res.size,
     totalPages: res.totalPages,
   };
+}
+
+/**
+ * PUT /api/v1/tickets/{id}
+ */
+export async function updateTicket(args: {
+  id: string;
+  request: {
+    slug: string;
+    title: string;
+    status: TicketStatus;
+    visibility: "Public" | "Private";
+    startDate: string;       // ISO string for OffsetDateTime
+    endDate?: string | null; // ISO string or null
+    background?: string | null;
+    technologies: string[];
+    learned?: string | null;
+    roadblocksSummary?: string | null;
+    metricsSummary?: string | null;
+  };
+}): Promise<TicketDetail> {
+  const dto = await authedPut<BackendTicketDetailResponse>(
+      `/api/v1/tickets/${encodeURIComponent(args.id)}`,
+      args.request
+  );
+
+  return mapBackendDetailToTicketDetail(dto);
 }
