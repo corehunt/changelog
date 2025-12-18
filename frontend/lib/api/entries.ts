@@ -1,6 +1,6 @@
 // lib/api/entries.ts
 import { authedGet } from "../http";
-import { Entry } from "../types";
+import type { Entry } from "../types";
 
 export type EntrySummaryResponse = {
   entryId: number;
@@ -21,6 +21,27 @@ export type EntriesPageResponse = {
   totalPages: number;
 };
 
+function isPublicFromVisibility(visibility?: string): boolean {
+  return String(visibility ?? "").toUpperCase() === "PUBLIC";
+}
+
+function mapSummaryToEntry(e: EntrySummaryResponse): Entry {
+  return {
+    id: String(e.entryId),
+    ticketName: e.ticketName,
+    ticketSlug: e.ticketSlug,
+    date: e.date,
+    title: e.title ?? undefined,
+    body: e.body ?? undefined,
+    technologies: e.technologies ?? [],
+    isPublic: isPublicFromVisibility(e.visibility),
+  };
+}
+
+/**
+ * Global feed (paged)
+ * GET /api/v1/entries?page={page}&size={size}&sort=date,desc
+ */
 export async function getEntriesPage(params?: {
   page?: number;
   size?: number;
@@ -39,19 +60,22 @@ export async function getEntriesPage(params?: {
   });
 
   return {
-    entries: (res.entries ?? []).map((e) => ({
-      id: String(e.entryId),
-      ticketName: e.ticketName,
-      ticketSlug: e.ticketSlug,
-      date: e.date,
-      title: e.title ?? undefined,
-      body: e.body ?? undefined,
-      technologies: e.technologies ?? [],
-      isPublic: e.visibility === "Public",
-    })),
+    entries: (res.entries ?? []).map(mapSummaryToEntry),
     page: res.page,
     size: res.size,
     totalElements: res.totalElements,
     totalPages: res.totalPages,
   };
+}
+
+/**
+ * Ticket-scoped entries (NOT paged)
+ * GET /api/v1/tickets/{ticketId}/entries
+ */
+export async function getEntriesForTicket(ticketId: string): Promise<Entry[]> {
+  const res = await authedGet<EntrySummaryResponse[]>(
+      `/api/v1/tickets/${ticketId}/entries`
+  );
+
+  return (res ?? []).map(mapSummaryToEntry);
 }

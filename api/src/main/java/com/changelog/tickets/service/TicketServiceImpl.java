@@ -4,8 +4,10 @@ import com.changelog.tickets.dto.*;
 import com.changelog.tickets.exception.TicketNotFoundException;
 import com.changelog.tickets.mapper.EntryMapper;
 import com.changelog.tickets.mapper.TicketMapper;
+import com.changelog.tickets.model.Entry;
 import com.changelog.tickets.model.Ticket;
 import com.changelog.tickets.model.TicketStatus;
+import com.changelog.tickets.repository.EntryRepository;
 import com.changelog.tickets.repository.TicketRepository;
 import com.changelog.tickets.repository.TicketSpecifications;
 import com.changelog.tickets.util.TicketIdGenerator;
@@ -24,6 +26,7 @@ import java.util.List;
 public class TicketServiceImpl implements TicketService {
 
     private final TicketRepository ticketRepository;
+    private final EntryRepository entryRepository;
     private final TicketIdGenerator ticketIdGenerator;
     private final TicketMapper ticketMapper;
     private final EntryMapper entryMapper;
@@ -145,6 +148,19 @@ public class TicketServiceImpl implements TicketService {
                 .metricsSummary(ticket.getMetricsSummary())
                 .entries(summaryResp)
                 .build();
+    }
+
+    @Override
+    @Transactional
+    public List<EntrySummaryResponse> getEntriesForTicket(Long ticketId) {
+
+         ticketRepository.findById(ticketId).orElseThrow(() -> new TicketNotFoundException(ticketId));
+
+        List<Entry> entries = entryRepository.findByTicketIdOrderByDateAsc(ticketId);
+
+        return entries.stream()
+                .map(entryMapper::toSummary)
+                .toList();
     }
 
 }

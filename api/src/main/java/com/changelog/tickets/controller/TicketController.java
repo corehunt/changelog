@@ -13,6 +13,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 
 @RestController
 @RequestMapping("/api/v1/tickets")
@@ -52,6 +54,13 @@ public class TicketController {
                 .build();
 
         return ticketService.getTickets(filters, pageable);
+    }
+
+    @GetMapping("/{ticketId}/entries")
+    public List<EntrySummaryResponse> getEntriesForTicket(@PathVariable Long ticketId) {
+        log.info("GET /api/v1/tickets/{}/entries", ticketId);
+
+        return ticketService.getEntriesForTicket(ticketId);
     }
 
     @PostMapping
