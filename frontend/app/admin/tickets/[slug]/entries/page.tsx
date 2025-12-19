@@ -259,6 +259,8 @@ export default function ManageEntriesPage({ params }: { params: { slug: string }
         );
     }
 
+    const subtleDanger = '#ef4444';
+
     return (
         <ProtectedRoute enabled={AUTH_ENABLED}>
             <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
@@ -309,7 +311,7 @@ export default function ManageEntriesPage({ params }: { params: { slug: string }
                     )}
                 </div>
 
-                 DELETE CONFIRM DIALOG (new)
+                {/* DELETE CONFIRM DIALOG */}
                 <Dialog
                     open={deleteDialogOpen}
                     onOpenChange={(open) => {
@@ -358,7 +360,7 @@ export default function ManageEntriesPage({ params }: { params: { slug: string }
                                     className="px-6 py-3 text-sm transition-opacity hover:opacity-70 disabled:opacity-50"
                                     style={{
                                         backgroundColor: THEME.colors.surface.elevated,
-                                        color: THEME.colors.text.primary,
+                                        color: subtleDanger,
                                         border: `1px solid ${THEME.colors.border.subtle}`,
                                     }}
                                 >
@@ -678,7 +680,15 @@ export default function ManageEntriesPage({ params }: { params: { slug: string }
                                             onClick={() => handleDeleteClick(entry)}
                                             disabled={deleteInFlightId === entry.id}
                                             className="text-xs font-mono transition-opacity hover:opacity-70 disabled:opacity-50"
-                                            style={{ color: THEME.colors.text.secondary }}
+                                            style={{
+                                                color: THEME.colors.text.secondary,
+                                            }}
+                                            onMouseEnter={(e) => {
+                                                (e.currentTarget as HTMLButtonElement).style.color = subtleDanger;
+                                            }}
+                                            onMouseLeave={(e) => {
+                                                (e.currentTarget as HTMLButtonElement).style.color = THEME.colors.text.secondary;
+                                            }}
                                         >
                                             {deleteInFlightId === entry.id ? 'deleting…' : 'delete'}
                                         </button>
