@@ -14,7 +14,7 @@ import { ProtectedRoute } from '@/lib/auth/ProtectedRoute';
 import { AUTH_ENABLED } from '@/lib/auth/config';
 
 import { getTicketDetailBySlug } from '@/lib/api/tickets';
-import { deleteEntry, getEntriesForTicket, updateEntry } from '@/lib/api/entries';
+import { createEntry, deleteEntry, getEntriesForTicket, updateEntry } from '@/lib/api/entries';
 
 export default function ManageEntriesPage({ params }: { params: { slug: string } }) {
     const [ticket, setTicket] = useState<{
@@ -49,6 +49,9 @@ export default function ManageEntriesPage({ params }: { params: { slug: string }
         isPublic: true,
     });
 
+    const [createdOk, setCreatedOk] = useState(false);
+    const [createError, setCreateError] = useState<string | null>(null);
+
     const [editSaving, setEditSaving] = useState(false);
     const [editSaved, setEditSaved] = useState(false);
     const [editSaveError, setEditSaveError] = useState<string | null>(null);
@@ -56,6 +59,8 @@ export default function ManageEntriesPage({ params }: { params: { slug: string }
     const [deleteInFlightId, setDeleteInFlightId] = useState<string | null>(null);
     const [deletedOk, setDeletedOk] = useState(false);
     const [deleteError, setDeleteError] = useState<string | null>(null);
+
+    const [createSaving, setCreateSaving] = useState(false);
 
     useEffect(() => {
         if (!editSaved) return;
@@ -68,6 +73,12 @@ export default function ManageEntriesPage({ params }: { params: { slug: string }
         const t = setTimeout(() => setDeletedOk(false), 1500);
         return () => clearTimeout(t);
     }, [deletedOk]);
+
+    useEffect(() => {
+        if (!createdOk) return;
+        const t = setTimeout(() => setCreatedOk(false), 1500);
+        return () => clearTimeout(t);
+    }, [createdOk]);
 
     useEffect(() => {
         let cancelled = false;
@@ -91,7 +102,7 @@ export default function ManageEntriesPage({ params }: { params: { slug: string }
                 if (cancelled) return;
 
                 const sorted = [...e].sort(
-                    (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+                    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
                 );
                 setEntries(sorted);
             } finally {
@@ -111,27 +122,49 @@ export default function ManageEntriesPage({ params }: { params: { slug: string }
         return Number.isFinite(n) ? n : null;
     }, [ticket?.id]);
 
-    const handleAddEntry = () => {
-        const newEntry: Entry = {
-            id: `mock-${Date.now()}`,
-            ticketName: ticket?.title ?? 'Ticket',
-            ticketSlug: ticket?.slug ?? params.slug,
-            date: `${formData.date}T00:00:00Z`,
-            title: formData.title,
-            body: formData.body,
-            technologies: formData.technologies,
-            isPublic: formData.isPublic,
-        };
+    const subtleDanger = '#ef4444';
 
-        setEntries([...entries, newEntry]);
-        setDialogOpen(false);
-        setFormData({
-            title: '',
-            body: '',
-            date: format(new Date(), 'yyyy-MM-dd'),
-            technologies: [],
-            isPublic: true,
-        });
+    const handleAddEntry = async () => {
+        if (!ticketIdNumber) {
+            setCreateError('Invalid ticket id');
+            return;
+        }
+
+        try {
+            setCreateSaving(true);
+            setCreateError(null);
+            setCreatedOk(false);
+
+            const created = await createEntry({
+                ticketId: ticketIdNumber,
+                title: formData.title,
+                body: formData.body,
+                date: `${formData.date}T00:00:00Z`,
+                technologies: formData.technologies,
+                visibility: formData.isPublic ? 'Public' : 'Private',
+            });
+
+            setEntries((prev) => {
+                const next = [...prev, created];
+                next.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+                return next;
+            });
+
+            setCreatedOk(true);
+            setDialogOpen(false);
+
+            setFormData({
+                title: '',
+                body: '',
+                date: format(new Date(), 'yyyy-MM-dd'),
+                technologies: [],
+                isPublic: true,
+            });
+        } catch (err: any) {
+            setCreateError(err?.message ?? 'Failed to create entry');
+        } finally {
+            setCreateSaving(false);
+        }
     };
 
     const handleEditClick = (entry: Entry) => {
@@ -143,9 +176,7 @@ export default function ManageEntriesPage({ params }: { params: { slug: string }
         setEditFormData({
             title: entry.title || '',
             body: entry.body || '',
-            date: entry.date
-                ? format(new Date(entry.date), 'yyyy-MM-dd')
-                : format(new Date(), 'yyyy-MM-dd'),
+            date: entry.date ? format(new Date(entry.date), 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd'),
             technologies: entry.technologies ?? [],
             isPublic: entry.isPublic,
         });
@@ -165,7 +196,7 @@ export default function ManageEntriesPage({ params }: { params: { slug: string }
             setEditSaveError(null);
             setEditSaved(false);
 
-            const payload = {
+            const updated = await updateEntry(editingEntry.id, {
                 ticketId: ticketIdNumber,
                 // convert yyyy-MM-dd -> OffsetDateTime string
                 date: `${editFormData.date}T00:00:00Z`,
@@ -173,7 +204,7 @@ export default function ManageEntriesPage({ params }: { params: { slug: string }
                 body: editFormData.body,
                 technologies: editFormData.technologies,
                 visibility: editFormData.isPublic ? 'Public' : 'Private',
-            } as const;
+            });
 
             const updated = await updateEntry(editingEntry.id, payload);
 
@@ -259,8 +290,6 @@ export default function ManageEntriesPage({ params }: { params: { slug: string }
         );
     }
 
-    const subtleDanger = '#ef4444';
-
     return (
         <ProtectedRoute enabled={AUTH_ENABLED}>
             <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
@@ -279,7 +308,10 @@ export default function ManageEntriesPage({ params }: { params: { slug: string }
 
                 <div className="mb-8">
                     <button
-                        onClick={() => setDialogOpen(true)}
+                        onClick={() => {
+                            setCreateError(null);
+                            setDialogOpen(true);
+                        }}
                         className="inline-flex items-center gap-2 px-6 py-3 text-sm transition-opacity hover:opacity-70"
                         style={{
                             backgroundColor: THEME.colors.surface.elevated,
@@ -290,6 +322,19 @@ export default function ManageEntriesPage({ params }: { params: { slug: string }
                         <Plus size={14} />
                         Add new entry
                     </button>
+
+                    <span
+                        className={`ml-3 text-xs font-mono transition-opacity duration-300 ${
+                            createdOk ? 'opacity-100' : 'opacity-0'
+                        }`}
+                        style={{
+                            paddingLeft: 10,
+                            borderLeft: `2px solid ${THEME.colors.border.subtle}`,
+                            color: THEME.colors.text.secondary,
+                        }}
+                    >
+            ✓ created
+          </span>
 
                     <span
                         className={`ml-3 text-xs font-mono transition-opacity duration-300 ${
@@ -383,7 +428,6 @@ export default function ManageEntriesPage({ params }: { params: { slug: string }
                     </DialogContent>
                 </Dialog>
 
-                {/* Add Dialog (POST later) */}
                 <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
                     <DialogContent
                         className="max-w-2xl max-h-[90vh] overflow-y-auto"
@@ -402,6 +446,12 @@ export default function ManageEntriesPage({ params }: { params: { slug: string }
                         </DialogHeader>
 
                         <div className="space-y-6 pt-4">
+                            {createError && (
+                                <div className="text-sm" style={{ color: THEME.colors.text.secondary }}>
+                                    {createError}
+                                </div>
+                            )}
+
                             <div className="space-y-2">
                                 <label className="block text-sm font-mono" style={{ color: THEME.colors.text.secondary }}>
                                     Title
@@ -482,7 +532,7 @@ export default function ManageEntriesPage({ params }: { params: { slug: string }
                             <div className="flex gap-3 pt-4">
                                 <button
                                     onClick={handleAddEntry}
-                                    disabled={!formData.title || !formData.body}
+                                    disabled={createSaving || !formData.title || !formData.body}
                                     className="flex-1 px-6 py-3 text-sm transition-opacity hover:opacity-70 disabled:opacity-50"
                                     style={{
                                         backgroundColor: THEME.colors.surface.elevated,
@@ -490,11 +540,12 @@ export default function ManageEntriesPage({ params }: { params: { slug: string }
                                         border: `1px solid ${THEME.colors.border.subtle}`,
                                     }}
                                 >
-                                    Add Entry
+                                    {createSaving ? 'Creating…' : 'Add Entry'}
                                 </button>
                                 <button
                                     onClick={() => setDialogOpen(false)}
-                                    className="px-6 py-3 text-sm transition-opacity hover:opacity-70"
+                                    disabled={createSaving}
+                                    className="px-6 py-3 text-sm transition-opacity hover:opacity-70 disabled:opacity-50"
                                     style={{
                                         backgroundColor: THEME.colors.background.secondary,
                                         color: THEME.colors.text.secondary,
@@ -660,7 +711,10 @@ export default function ManageEntriesPage({ params }: { params: { slug: string }
                             <div className="space-y-4">
                                 <div className="flex items-start justify-between gap-4">
                                     <div className="flex-1">
-                                        <div className="text-base md:text-lg font-mono font-semibold mb-1" style={{ color: THEME.colors.text.primary }}>
+                                        <div
+                                            className="text-base md:text-lg font-mono font-semibold mb-1"
+                                            style={{ color: THEME.colors.text.primary }}
+                                        >
                                             {entry.title}
                                         </div>
                                         <div className="text-xs font-mono" style={{ color: THEME.colors.text.secondary }}>
@@ -676,13 +730,12 @@ export default function ManageEntriesPage({ params }: { params: { slug: string }
                                         >
                                             edit
                                         </button>
+
                                         <button
                                             onClick={() => handleDeleteClick(entry)}
                                             disabled={deleteInFlightId === entry.id}
                                             className="text-xs font-mono transition-opacity hover:opacity-70 disabled:opacity-50"
-                                            style={{
-                                                color: THEME.colors.text.secondary,
-                                            }}
+                                            style={{ color: THEME.colors.text.secondary }}
                                             onMouseEnter={(e) => {
                                                 (e.currentTarget as HTMLButtonElement).style.color = subtleDanger;
                                             }}
