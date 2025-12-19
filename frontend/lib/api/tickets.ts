@@ -1,5 +1,5 @@
 // frontend/lib/api/tickets.ts
-import { authedGet, authedPut } from "../http";
+import { authedGet, authedPut, authedPost } from "../http";
 import type { Entry, Ticket, TicketStatus } from "../types";
 
 type BackendEntrySummaryResponse = {
@@ -39,6 +39,8 @@ type BackendTicketSummaryResponse = {
   endDate?: string | null;
   technologies: string[];
 };
+
+type BackendCreateTicketResponse = BackendTicketSummaryResponse;
 
 type BackendTicketsPageResponse = {
   tickets: BackendTicketSummaryResponse[];
@@ -231,6 +233,24 @@ export async function getTickets(
 }
 
 /**
+ * POST /api/v1/tickets
+ * Creates a ticket and returns TicketSummaryResponse.
+ */
+export async function createTicket(request: {
+  title: string;
+  slug: string;
+  status: TicketStatus;
+  visibility: "Public" | "Private";
+  startDate: string;
+  endDate?: string | null;
+  background?: string | null;
+  technologies?: string[];
+}): Promise<Ticket> {
+  const dto = await authedPost<BackendCreateTicketResponse>("/api/v1/tickets", request);
+  return mapBackendSummaryToTicket(dto);
+}
+
+/**
  * PUT /api/v1/tickets/{id}
  */
 export async function updateTicket(args: {
@@ -240,8 +260,8 @@ export async function updateTicket(args: {
     title: string;
     status: TicketStatus;
     visibility: "Public" | "Private";
-    startDate: string;       // ISO string for OffsetDateTime
-    endDate?: string | null; // ISO string or null
+    startDate: string;
+    endDate?: string | null;
     background?: string | null;
     technologies: string[];
     learned?: string | null;

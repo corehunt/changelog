@@ -1,4 +1,4 @@
-export type TicketStatus = "ACTIVE" | "COMPLETED";
+export type TicketStatus = "ACTIVE" | "COMPLETED" | "ARCHIVED";
 
 export type Ticket = {
   id: string;

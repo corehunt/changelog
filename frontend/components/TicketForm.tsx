@@ -1,10 +1,11 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { TechnologySelector } from '@/components/TechnologySelector';
 import { THEME } from '@/lib/theme';
 import { Ticket, TicketStatus } from '@/lib/types';
-import { updateTicket } from '@/lib/api/tickets';
+import { updateTicket, createTicket } from '@/lib/api/tickets';
 
 interface TicketFormProps {
     ticket?: Ticket;
@@ -15,7 +16,19 @@ function toDateInputValue(value?: string | null): string {
     return value.length >= 10 ? value.slice(0, 10) : value;
 }
 
+function slugify(input: string): string {
+    return input
+        .trim()
+        .toLowerCase()
+        .replace(/['"]/g, '')
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+}
+
 export function TicketForm({ ticket }: TicketFormProps) {
+    const router = useRouter();
+    const isEditMode = !!ticket?.id;
+
     const [title, setTitle] = useState(ticket?.title ?? '');
     const [slug, setSlug] = useState(ticket?.slug ?? '');
     const [status, setStatus] = useState<TicketStatus>(ticket?.status ?? 'ACTIVE');
@@ -23,30 +36,28 @@ export function TicketForm({ ticket }: TicketFormProps) {
     const initialVisibilityUi = ticket?.isPublic === false ? 'private' : 'public';
     const [visibilityUi, setVisibilityUi] = useState<'public' | 'private'>(initialVisibilityUi);
 
-    const [startDate, setStartDate] = useState<string>(
-        toDateInputValue(ticket?.startDate ?? '')
-    );
-    const [endDate, setEndDate] = useState<string>(
-        toDateInputValue(ticket?.endDate ?? '')
-    );
+    const [startDate, setStartDate] = useState<string>(toDateInputValue(ticket?.startDate ?? ''));
+    const [endDate, setEndDate] = useState<string>(toDateInputValue(ticket?.endDate ?? ''));
 
     const [background, setBackground] = useState(ticket?.background ?? '');
     const [learned, setLearned] = useState(ticket?.learned ?? '');
-    const [roadblocksSummary, setRoadblocksSummary] = useState(
-        ticket?.roadblocksSummary ?? ''
-    );
-    const [metricsSummary, setMetricsSummary] = useState(
-        ticket?.metricsSummary ?? ''
-    );
+    const [roadblocksSummary, setRoadblocksSummary] = useState(ticket?.roadblocksSummary ?? '');
+    const [metricsSummary, setMetricsSummary] = useState(ticket?.metricsSummary ?? '');
 
-    const [selectedTechnologies, setSelectedTechnologies] = useState<string[]>(
-        ticket?.technologies ?? []
-    );
+    const [selectedTechnologies, setSelectedTechnologies] = useState<string[]>(ticket?.technologies ?? []);
 
     const [saving, setSaving] = useState(false);
     const [saveError, setSaveError] = useState<string | null>(null);
     const [saveOk, setSaveOk] = useState(false);
     const [showNotice, setShowNotice] = useState(false);
+
+    useEffect(() => {
+        if (isEditMode) return;
+        if (slug.trim()) return;
+        const next = slugify(title);
+        if (next) setSlug(next);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [title, isEditMode]);
 
     useEffect(() => {
         if (!saveOk) return;
@@ -82,61 +93,89 @@ export function TicketForm({ ticket }: TicketFormProps) {
     ]);
 
     const canSave = useMemo(() => {
-        if (!ticket?.id) return false;
         if (!title.trim()) return false;
-        if (!slug.trim()) return false;
         if (!startDate) return false;
         return true;
-    }, [ticket?.id, title, slug, startDate]);
+    }, [title, startDate]);
 
-    const handleSave = async () => {
-        if (!ticket?.id) return;
-
+    const handleSubmit = async () => {
         setSaving(true);
         setSaveError(null);
         setSaveOk(false);
         setShowNotice(false);
 
         try {
-            await updateTicket({
-                id: ticket.id,
-                request: {
-                    slug: slug.trim(),
-                    title: title.trim(),
-                    status,
-                    visibility: visibilityUi === 'public' ? 'Public' : 'Private',
-                    startDate: startDate,
-                    endDate: endDate ? endDate : null,
-                    background: background || null,
-                    technologies: selectedTechnologies,
-                    learned: learned || null,
-                    roadblocksSummary: roadblocksSummary || null,
-                    metricsSummary: metricsSummary || null,
-                },
+            const finalSlug = (slug || slugify(title)).trim();
+            if (!finalSlug) {
+                throw new Error('Slug could not be generated. Please enter a slug.');
+            }
+
+            type Visibility = "Public" | "Private";
+
+            const visibility: Visibility = visibilityUi === "public" ? "Public" : "Private";
+
+            const requestBase: {
+                slug: string;
+                title: string;
+                status: TicketStatus;
+                visibility: Visibility;
+                startDate: string;
+                endDate: string | null;
+                background: string | null;
+                technologies: string[];
+                learned: string | null;
+                roadblocksSummary: string | null;
+                metricsSummary: string | null;
+            } = {
+                slug: finalSlug,
+                title: title.trim(),
+                status,
+                visibility,
+                startDate,
+                endDate: endDate ? endDate : null,
+                background: background || null,
+                technologies: selectedTechnologies,
+                learned: learned || null,
+                roadblocksSummary: roadblocksSummary || null,
+                metricsSummary: metricsSummary || null,
+            };
+
+
+            if (isEditMode && ticket?.id) {
+                await updateTicket({
+                    id: ticket.id,
+                    request: requestBase,
+                });
+                setSaveOk(true);
+                return;
+            }
+
+            // create mode
+            const created = await createTicket({
+                title: requestBase.title,
+                slug: requestBase.slug,
+                status: requestBase.status,
+                visibility: requestBase.visibility,
+                startDate: requestBase.startDate,
+                endDate: requestBase.endDate,
+                background: requestBase.background,
+                technologies: requestBase.technologies,
             });
 
-            setSaveOk(true);
+            // Redirect to admin detail
+            router.push(`/admin/tickets/${encodeURIComponent(created.slug)}`);
+            router.refresh();
         } catch (err: any) {
-            setSaveError(err?.message ?? 'Failed to save changes');
+            setSaveError(err?.message ?? 'Failed to save');
         } finally {
             setSaving(false);
         }
     };
 
-    const inputStyle = {
-        backgroundColor: THEME.colors.surface.elevated,
-        color: THEME.colors.text.primary,
-        border: `1px solid ${THEME.colors.border.subtle}`,
-        borderRadius: THEME.borderRadius.input,
-    } as const;
-
     return (
         <div className="space-y-6">
             <div>
-                <label
-                    className="block text-xs font-mono uppercase tracking-wider mb-2"
-                    style={{ color: THEME.colors.text.secondary }}
-                >
+                <label className="block text-xs font-mono uppercase tracking-wider mb-2" style={{ color: THEME.colors.text.secondary }}>
                     Title
                 </label>
                 <input
@@ -155,17 +194,14 @@ export function TicketForm({ ticket }: TicketFormProps) {
             </div>
 
             <div>
-                <label
-                    className="block text-xs font-mono uppercase tracking-wider mb-2"
-                    style={{ color: THEME.colors.text.secondary }}
-                >
+                <label className="block text-xs font-mono uppercase tracking-wider mb-2" style={{ color: THEME.colors.text.secondary }}>
                     Slug
                 </label>
                 <input
                     type="text"
                     value={slug}
                     onChange={(e) => setSlug(e.target.value)}
-                    placeholder="url-friendly-slug"
+                    placeholder="auto-generated-from-title"
                     className="w-full px-4 py-3 text-sm"
                     style={{
                         backgroundColor: THEME.colors.surface.elevated,
@@ -174,14 +210,16 @@ export function TicketForm({ ticket }: TicketFormProps) {
                         borderRadius: THEME.borderRadius.input,
                     }}
                 />
+                {!isEditMode && (
+                    <div className="mt-2 text-xs font-mono" style={{ color: THEME.colors.text.muted }}>
+                        Leave blank to auto-generate from the title.
+                    </div>
+                )}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                    <label
-                        className="block text-xs font-mono uppercase tracking-wider mb-2"
-                        style={{ color: THEME.colors.text.secondary }}
-                    >
+                    <label className="block text-xs font-mono uppercase tracking-wider mb-2" style={{ color: THEME.colors.text.secondary }}>
                         Status
                     </label>
                     <select
@@ -197,15 +235,11 @@ export function TicketForm({ ticket }: TicketFormProps) {
                     >
                         <option value="ACTIVE">ACTIVE</option>
                         <option value="COMPLETED">COMPLETED</option>
-                        <option value="ARCHIVED">ARCHIVED</option>
                     </select>
                 </div>
 
                 <div>
-                    <label
-                        className="block text-xs font-mono uppercase tracking-wider mb-2"
-                        style={{ color: THEME.colors.text.secondary }}
-                    >
+                    <label className="block text-xs font-mono uppercase tracking-wider mb-2" style={{ color: THEME.colors.text.secondary }}>
                         Visibility
                     </label>
                     <select
@@ -227,10 +261,7 @@ export function TicketForm({ ticket }: TicketFormProps) {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                    <label
-                        className="block text-xs font-mono uppercase tracking-wider mb-2"
-                        style={{ color: THEME.colors.text.secondary }}
-                    >
+                    <label className="block text-xs font-mono uppercase tracking-wider mb-2" style={{ color: THEME.colors.text.secondary }}>
                         Start Date
                     </label>
                     <input
@@ -248,10 +279,7 @@ export function TicketForm({ ticket }: TicketFormProps) {
                 </div>
 
                 <div>
-                    <label
-                        className="block text-xs font-mono uppercase tracking-wider mb-2"
-                        style={{ color: THEME.colors.text.secondary }}
-                    >
+                    <label className="block text-xs font-mono uppercase tracking-wider mb-2" style={{ color: THEME.colors.text.secondary }}>
                         End Date
                     </label>
                     <input
@@ -270,10 +298,7 @@ export function TicketForm({ ticket }: TicketFormProps) {
             </div>
 
             <div>
-                <label
-                    className="block text-xs font-mono uppercase tracking-wider mb-2"
-                    style={{ color: THEME.colors.text.secondary }}
-                >
+                <label className="block text-xs font-mono uppercase tracking-wider mb-2" style={{ color: THEME.colors.text.secondary }}>
                     Background
                 </label>
                 <textarea
@@ -292,20 +317,14 @@ export function TicketForm({ ticket }: TicketFormProps) {
             </div>
 
             <div>
-                <label
-                    className="block text-xs font-mono uppercase tracking-wider mb-2"
-                    style={{ color: THEME.colors.text.secondary }}
-                >
+                <label className="block text-xs font-mono uppercase tracking-wider mb-2" style={{ color: THEME.colors.text.secondary }}>
                     Technologies
                 </label>
                 <TechnologySelector selectedTechnologies={selectedTechnologies} onChange={setSelectedTechnologies} />
             </div>
 
             <div>
-                <label
-                    className="block text-xs font-mono uppercase tracking-wider mb-2"
-                    style={{ color: THEME.colors.text.secondary }}
-                >
+                <label className="block text-xs font-mono uppercase tracking-wider mb-2" style={{ color: THEME.colors.text.secondary }}>
                     What I Learned
                 </label>
                 <textarea
@@ -324,10 +343,7 @@ export function TicketForm({ ticket }: TicketFormProps) {
             </div>
 
             <div>
-                <label
-                    className="block text-xs font-mono uppercase tracking-wider mb-2"
-                    style={{ color: THEME.colors.text.secondary }}
-                >
+                <label className="block text-xs font-mono uppercase tracking-wider mb-2" style={{ color: THEME.colors.text.secondary }}>
                     Roadblocks Summary
                 </label>
                 <textarea
@@ -346,10 +362,7 @@ export function TicketForm({ ticket }: TicketFormProps) {
             </div>
 
             <div>
-                <label
-                    className="block text-xs font-mono uppercase tracking-wider mb-2"
-                    style={{ color: THEME.colors.text.secondary }}
-                >
+                <label className="block text-xs font-mono uppercase tracking-wider mb-2" style={{ color: THEME.colors.text.secondary }}>
                     Metrics Summary
                 </label>
                 <textarea
@@ -366,6 +379,8 @@ export function TicketForm({ ticket }: TicketFormProps) {
                     }}
                 />
             </div>
+
+            {/* Footer */}
             <div className="flex items-center justify-end gap-3 pt-2">
                 <div
                     className="inline-flex items-center gap-2 px-2 py-1 text-xs font-mono"
@@ -384,7 +399,7 @@ export function TicketForm({ ticket }: TicketFormProps) {
                 </div>
 
                 <button
-                    onClick={handleSave}
+                    onClick={handleSubmit}
                     disabled={!canSave || saving}
                     className="px-6 py-3 text-sm transition-opacity hover:opacity-70 disabled:opacity-50"
                     style={{
@@ -393,7 +408,7 @@ export function TicketForm({ ticket }: TicketFormProps) {
                         border: `1px solid ${THEME.colors.border.subtle}`,
                     }}
                 >
-                    {saving ? 'Saving…' : 'Save changes'}
+                    {saving ? (isEditMode ? 'Saving…' : 'Creating…') : isEditMode ? 'Save changes' : 'Create ticket'}
                 </button>
             </div>
         </div>
