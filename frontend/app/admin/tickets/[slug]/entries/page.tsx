@@ -49,6 +49,7 @@ export default function ManageEntriesPage({ params }: { params: { slug: string }
         isPublic: true,
     });
 
+    // notices
     const [createdOk, setCreatedOk] = useState(false);
     const [createError, setCreateError] = useState<string | null>(null);
 
@@ -206,9 +207,6 @@ export default function ManageEntriesPage({ params }: { params: { slug: string }
                 visibility: editFormData.isPublic ? 'Public' : 'Private',
             });
 
-            const updated = await updateEntry(editingEntry.id, payload);
-
-            // merge back into entries list, preserving ticketName/ticketSlug
             setEntries((prev) =>
                 prev.map((e) =>
                     e.id === editingEntry.id
