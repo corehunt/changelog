@@ -147,7 +147,9 @@ export default function ManageEntriesPage({ params }: { params: { slug: string }
 
             setEntries((prev) => {
                 const next = [...prev, created];
-                next.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+                next.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
                 return next;
             });
 
@@ -177,7 +179,9 @@ export default function ManageEntriesPage({ params }: { params: { slug: string }
         setEditFormData({
             title: entry.title || '',
             body: entry.body || '',
-            date: entry.date ? format(new Date(entry.date), 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd'),
+            date: entry.date
+                ? format(new Date(entry.date), 'yyyy-MM-dd')
+                : format(new Date(), 'yyyy-MM-dd'),
             technologies: entry.technologies ?? [],
             isPublic: entry.isPublic,
         });
@@ -207,8 +211,8 @@ export default function ManageEntriesPage({ params }: { params: { slug: string }
                 visibility: editFormData.isPublic ? 'Public' : 'Private',
             });
 
-            setEntries((prev) =>
-                prev.map((e) =>
+            setEntries((prev) => {
+                const next = prev.map((e) =>
                     e.id === editingEntry.id
                         ? {
                             ...e,
@@ -219,8 +223,12 @@ export default function ManageEntriesPage({ params }: { params: { slug: string }
                             isPublic: updated.isPublic,
                         }
                         : e
-                )
-            );
+                );
+
+                next.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+                return next;
+            });
 
             setEditSaved(true);
             setEditDialogOpen(false);
