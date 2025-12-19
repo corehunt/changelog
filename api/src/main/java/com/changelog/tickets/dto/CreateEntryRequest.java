@@ -4,7 +4,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
-import java.time.OffsetDateTime;
+import java.time.LocalDate;
 
 @Data
 public class CreateEntryRequest {
@@ -13,7 +13,7 @@ public class CreateEntryRequest {
     private String title;
     @NotNull
     private String ticketId;
-    private OffsetDateTime date;
+    private LocalDate date;
     private String body;
     private String visibility;
     private String[] technologies;

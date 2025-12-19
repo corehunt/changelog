@@ -6,7 +6,7 @@ import com.changelog.tickets.model.Entry;
 import com.changelog.tickets.model.Ticket;
 import org.junit.jupiter.api.Test;
 
-import java.time.OffsetDateTime;
+import java.time.LocalDate;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -25,7 +25,7 @@ class EntryMapperTest {
         Entry entry = Entry.builder()
                 .id(443682370L)
                 .ticket(ticket)
-                .date(OffsetDateTime.parse("2025-12-10T17:30:00Z"))
+                .date(LocalDate.of(2025, 12, 10))
                 .title("Identified bottlenecks")
                 .body("Found inefficient JPA queries.")
                 .technologies(new String[]{"Spring Boot", "PostgreSQL"})
@@ -48,7 +48,7 @@ class EntryMapperTest {
     void toDetailResponseMapsAllFields() {
         Entry entry = Entry.builder()
                 .id(443682370L)
-                .date(OffsetDateTime.parse("2025-12-10T17:30:00Z"))
+                .date(LocalDate.of(2025, 12, 10))
                 .title("Identified bottlenecks")
                 .body("Found inefficient JPA queries.")
                 .technologies(new String[]{"Spring Boot"})

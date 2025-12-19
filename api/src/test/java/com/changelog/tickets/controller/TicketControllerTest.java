@@ -13,7 +13,7 @@ import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.time.OffsetDateTime;
+import java.time.LocalDate;
 import java.util.List;
 
 import static org.hamcrest.Matchers.is;
@@ -48,7 +48,7 @@ class TicketControllerTest {
                 .slug("refactor-reevaluation-processor")
                 .title("Refactor reevaluation processor")
                 .status(TicketStatus.ACTIVE)
-                .startDate(OffsetDateTime.parse("2025-12-10T14:30:00Z"))
+                .startDate(LocalDate.of(2025, 12, 10))
                 .build();
 
         TicketsPageResponse response = TicketsPageResponse.builder()
@@ -83,7 +83,7 @@ class TicketControllerTest {
         request.setTitle("Refactor reevaluation processor");
         request.setStatus(TicketStatus.ACTIVE);
         request.setVisibility("Public");
-        request.setStartDate(OffsetDateTime.parse("2025-12-10T14:30:00Z"));
+        request.setStartDate(LocalDate.of(2025, 12, 10));
         request.setEndDate(null);
         request.setBackground("Background");
         request.setTechnologies(new String[]{"Java", "Spring Boot"});
@@ -118,7 +118,7 @@ class TicketControllerTest {
                 .title("Refactor reevaluation processor")
                 .status(TicketStatus.ACTIVE)
                 .visibility("P")
-                .startDate(OffsetDateTime.parse("2025-12-10T14:30:00Z"))
+                .startDate(LocalDate.of(2025, 12, 10))
                 .build();
 
         when(ticketService.getTicketById(id)).thenReturn(response);
@@ -141,8 +141,8 @@ class TicketControllerTest {
                 .title("Refactor reevaluation processor")
                 .status(TicketStatus.COMPLETED)
                 .visibility("Public")
-                .startDate(OffsetDateTime.parse("2025-12-10T14:30:00Z"))
-                .endDate(OffsetDateTime.parse("2025-12-12T18:00:00Z"))
+                .startDate(LocalDate.of(2025, 12, 10))
+                .endDate(LocalDate.of(2025, 12, 12))
                 .entries(List.of(
                         EntrySummaryResponse.builder()
                                 .entryId(443682370L)
@@ -151,7 +151,7 @@ class TicketControllerTest {
                                 .title("Identified bottlenecks")
                                 .body("Found inefficient JPA queries.")
                                 .technologies(new String[]{"Spring Boot", "PostgreSQL"})
-                                .date(OffsetDateTime.parse("2025-12-10T17:30:00Z"))
+                                .date(LocalDate.of(2025, 12, 10))
                                 .visibility("Public")
                                 .build()
                 ))
@@ -177,8 +177,8 @@ class TicketControllerTest {
         request.setTitle("Refactor reevaluation processor - final");
         request.setStatus(TicketStatus.COMPLETED);
         request.setVisibility("Public");
-        request.setStartDate(OffsetDateTime.parse("2025-12-10T14:30:00Z"));
-        request.setEndDate(OffsetDateTime.parse("2025-12-12T18:00:00Z"));
+        request.setStartDate(LocalDate.of(2025, 12, 10));
+        request.setEndDate(LocalDate.of(2025, 12, 12));
         request.setBackground("Updated background");
         request.setTechnologies(new String[]{"Java", "Spring Boot", "PostgreSQL", "Hibernate"});
         request.setLearned("Learned advanced batching strategies.");

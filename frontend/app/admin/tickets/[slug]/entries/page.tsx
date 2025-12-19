@@ -16,6 +16,22 @@ import { AUTH_ENABLED } from '@/lib/auth/config';
 import { getTicketDetailBySlug } from '@/lib/api/tickets';
 import { createEntry, deleteEntry, getEntriesForTicket, updateEntry } from '@/lib/api/entries';
 
+function toLocalDateOnly(dateStr: string): Date {
+    // Supports "YYYY-MM-DD" and "YYYY-MM-DDTHH:mm:ss..." by stripping time.
+    const [y, m, d] = dateStr.split('T')[0].split('-').map(Number);
+    return new Date(y, m - 1, d);
+}
+
+function compareDateOnlyDesc(a: string, b: string): number {
+    // Sort by date-only (no timezone), newest -> oldest
+    const [ay, am, ad] = a.split('T')[0].split('-').map(Number);
+    const [by, bm, bd] = b.split('T')[0].split('-').map(Number);
+
+    if (ay !== by) return by - ay;
+    if (am !== bm) return bm - am;
+    return bd - ad;
+}
+
 export default function ManageEntriesPage({ params }: { params: { slug: string } }) {
     const [ticket, setTicket] = useState<{
         id: string;
@@ -102,9 +118,7 @@ export default function ManageEntriesPage({ params }: { params: { slug: string }
                 const e = await getEntriesForTicket(t.id);
                 if (cancelled) return;
 
-                const sorted = [...e].sort(
-                    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-                );
+                const sorted = [...e].sort((a, b) => compareDateOnlyDesc(a.date, b.date));
                 setEntries(sorted);
             } finally {
                 if (!cancelled) setLoading(false);
@@ -140,16 +154,14 @@ export default function ManageEntriesPage({ params }: { params: { slug: string }
                 ticketId: ticketIdNumber,
                 title: formData.title,
                 body: formData.body,
-                date: `${formData.date}T00:00:00Z`,
+                date: formData.date,
                 technologies: formData.technologies,
                 visibility: formData.isPublic ? 'Public' : 'Private',
             });
 
             setEntries((prev) => {
                 const next = [...prev, created];
-
-                next.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-
+                next.sort((a, b) => compareDateOnlyDesc(a.date, b.date));
                 return next;
             });
 
@@ -179,9 +191,7 @@ export default function ManageEntriesPage({ params }: { params: { slug: string }
         setEditFormData({
             title: entry.title || '',
             body: entry.body || '',
-            date: entry.date
-                ? format(new Date(entry.date), 'yyyy-MM-dd')
-                : format(new Date(), 'yyyy-MM-dd'),
+            date: entry.date ? format(toLocalDateOnly(entry.date), 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd'),
             technologies: entry.technologies ?? [],
             isPublic: entry.isPublic,
         });
@@ -203,8 +213,7 @@ export default function ManageEntriesPage({ params }: { params: { slug: string }
 
             const updated = await updateEntry(editingEntry.id, {
                 ticketId: ticketIdNumber,
-                // convert yyyy-MM-dd -> OffsetDateTime string
-                date: `${editFormData.date}T00:00:00Z`,
+                date: editFormData.date,
                 title: editFormData.title,
                 body: editFormData.body,
                 technologies: editFormData.technologies,
@@ -225,8 +234,7 @@ export default function ManageEntriesPage({ params }: { params: { slug: string }
                         : e
                 );
 
-                next.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-
+                next.sort((a, b) => compareDateOnlyDesc(a.date, b.date));
                 return next;
             });
 
@@ -330,9 +338,7 @@ export default function ManageEntriesPage({ params }: { params: { slug: string }
                     </button>
 
                     <span
-                        className={`ml-3 text-xs font-mono transition-opacity duration-300 ${
-                            createdOk ? 'opacity-100' : 'opacity-0'
-                        }`}
+                        className={`ml-3 text-xs font-mono transition-opacity duration-300 ${createdOk ? 'opacity-100' : 'opacity-0'}`}
                         style={{
                             paddingLeft: 10,
                             borderLeft: `2px solid ${THEME.colors.border.subtle}`,
@@ -343,9 +349,7 @@ export default function ManageEntriesPage({ params }: { params: { slug: string }
           </span>
 
                     <span
-                        className={`ml-3 text-xs font-mono transition-opacity duration-300 ${
-                            deletedOk ? 'opacity-100' : 'opacity-0'
-                        }`}
+                        className={`ml-3 text-xs font-mono transition-opacity duration-300 ${deletedOk ? 'opacity-100' : 'opacity-0'}`}
                         style={{
                             paddingLeft: 10,
                             borderLeft: `2px solid ${THEME.colors.border.subtle}`,
@@ -378,10 +382,7 @@ export default function ManageEntriesPage({ params }: { params: { slug: string }
                         }}
                     >
                         <DialogHeader>
-                            <DialogTitle
-                                className="text-lg md:text-xl font-mono font-semibold"
-                                style={{ color: THEME.colors.text.primary }}
-                            >
+                            <DialogTitle className="text-lg md:text-xl font-mono font-semibold" style={{ color: THEME.colors.text.primary }}>
                                 Delete entry?
                             </DialogTitle>
                         </DialogHeader>
@@ -443,10 +444,7 @@ export default function ManageEntriesPage({ params }: { params: { slug: string }
                         }}
                     >
                         <DialogHeader>
-                            <DialogTitle
-                                className="text-xl md:text-2xl font-mono font-semibold"
-                                style={{ color: THEME.colors.text.primary }}
-                            >
+                            <DialogTitle className="text-xl md:text-2xl font-mono font-semibold" style={{ color: THEME.colors.text.primary }}>
                                 Add New Entry
                             </DialogTitle>
                         </DialogHeader>
@@ -515,10 +513,7 @@ export default function ManageEntriesPage({ params }: { params: { slug: string }
                                 <label className="block text-sm font-mono" style={{ color: THEME.colors.text.secondary }}>
                                     Technologies
                                 </label>
-                                <TechnologySelector
-                                    selectedTechnologies={formData.technologies}
-                                    onChange={(technologies) => setFormData({ ...formData, technologies })}
-                                />
+                                <TechnologySelector selectedTechnologies={formData.technologies} onChange={(technologies) => setFormData({ ...formData, technologies })} />
                             </div>
 
                             <div className="flex items-center gap-3">
@@ -575,10 +570,7 @@ export default function ManageEntriesPage({ params }: { params: { slug: string }
                         }}
                     >
                         <DialogHeader>
-                            <DialogTitle
-                                className="text-xl md:text-2xl font-mono font-semibold"
-                                style={{ color: THEME.colors.text.primary }}
-                            >
+                            <DialogTitle className="text-xl md:text-2xl font-mono font-semibold" style={{ color: THEME.colors.text.primary }}>
                                 Edit Entry
                             </DialogTitle>
                         </DialogHeader>
@@ -641,10 +633,7 @@ export default function ManageEntriesPage({ params }: { params: { slug: string }
                                 <label className="block text-sm font-mono" style={{ color: THEME.colors.text.secondary }}>
                                     Technologies
                                 </label>
-                                <TechnologySelector
-                                    selectedTechnologies={editFormData.technologies}
-                                    onChange={(technologies) => setEditFormData({ ...editFormData, technologies })}
-                                />
+                                <TechnologySelector selectedTechnologies={editFormData.technologies} onChange={(technologies) => setEditFormData({ ...editFormData, technologies })} />
                             </div>
 
                             <div className="flex items-center gap-3">
@@ -682,9 +671,7 @@ export default function ManageEntriesPage({ params }: { params: { slug: string }
                                 </button>
 
                                 <div
-                                    className={`text-xs font-mono transition-opacity duration-300 ${
-                                        editSaved ? 'opacity-100' : 'opacity-0'
-                                    }`}
+                                    className={`text-xs font-mono transition-opacity duration-300 ${editSaved ? 'opacity-100' : 'opacity-0'}`}
                                     style={{
                                         paddingLeft: 10,
                                         borderLeft: `2px solid ${THEME.colors.border.subtle}`,
@@ -717,14 +704,16 @@ export default function ManageEntriesPage({ params }: { params: { slug: string }
                             <div className="space-y-4">
                                 <div className="flex items-start justify-between gap-4">
                                     <div className="flex-1">
-                                        <div
-                                            className="text-base md:text-lg font-mono font-semibold mb-1"
-                                            style={{ color: THEME.colors.text.primary }}
-                                        >
+                                        <div className="text-base md:text-lg font-mono font-semibold mb-1" style={{ color: THEME.colors.text.primary }}>
                                             {entry.title}
                                         </div>
                                         <div className="text-xs font-mono" style={{ color: THEME.colors.text.secondary }}>
-                                            {format(new Date(entry.date), 'MMMM d, yyyy')} • Entry #{entries.length - index}
+                                            {toLocalDateOnly(entry.date).toLocaleDateString('en-US', {
+                                                month: 'short',
+                                                day: 'numeric',
+                                                year: 'numeric',
+                                            })}{' '}
+                                            • Entry #{entries.length - index}
                                         </div>
                                     </div>
 

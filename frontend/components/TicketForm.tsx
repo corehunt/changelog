@@ -15,11 +15,6 @@ function toDateInputValue(value?: string | null): string {
     return value.length >= 10 ? value.slice(0, 10) : value;
 }
 
-function dateInputToIso(value?: string): string | null {
-    if (!value) return null;
-    return new Date(`${value}T00:00:00.000Z`).toISOString();
-}
-
 export function TicketForm({ ticket }: TicketFormProps) {
     const [title, setTitle] = useState(ticket?.title ?? '');
     const [slug, setSlug] = useState(ticket?.slug ?? '');
@@ -110,8 +105,8 @@ export function TicketForm({ ticket }: TicketFormProps) {
                     title: title.trim(),
                     status,
                     visibility: visibilityUi === 'public' ? 'Public' : 'Private',
-                    startDate: dateInputToIso(startDate)!,
-                    endDate: endDate ? dateInputToIso(endDate) : null,
+                    startDate: startDate,
+                    endDate: endDate ? endDate : null,
                     background: background || null,
                     technologies: selectedTechnologies,
                     learned: learned || null,

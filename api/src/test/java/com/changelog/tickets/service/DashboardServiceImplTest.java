@@ -20,7 +20,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 
-import java.time.OffsetDateTime;
+import java.time.LocalDate;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -54,7 +54,7 @@ class DashboardServiceImplTest {
                 .slug("refactor-reevaluation-processor")
                 .title("Refactor reevaluation processor")
                 .status(TicketStatus.ACTIVE)
-                .startDate(OffsetDateTime.parse("2025-12-10T14:30:00Z"))
+                .startDate(LocalDate.of(2025, 12, 10))
                 .build();
 
         Page<Ticket> activeTicketsPage = new PageImpl<>(
@@ -76,7 +76,7 @@ class DashboardServiceImplTest {
         when(ticketMapper.toSummary(activeTicket)).thenReturn(activeSummary);
 
         // Recent entries page (Query 2)
-        OffsetDateTime mostRecentEntryDate = OffsetDateTime.parse("2025-12-12T18:00:00Z");
+        LocalDate mostRecentEntryDate = LocalDate.of(2025, 12, 12);
 
         Entry recentEntry = Entry.builder()
                 .id(443682370L)
@@ -110,7 +110,7 @@ class DashboardServiceImplTest {
         // Metrics (Query 3)
         when(ticketRepository.countByStatus(TicketStatus.ACTIVE)).thenReturn(1L);
         when(ticketRepository.countByStatus(TicketStatus.COMPLETED)).thenReturn(3L);
-        when(entryRepository.countByDateAfter(any(OffsetDateTime.class))).thenReturn(12L);
+        when(entryRepository.countByDateAfter(any(LocalDate.class))).thenReturn(12L);
 
         // Execute
         DashboardHomeResponse result = dashboardService.getHomePage();
@@ -120,7 +120,7 @@ class DashboardServiceImplTest {
         verify(entryRepository).findAll(any(PageRequest.class));
         verify(ticketRepository).countByStatus(TicketStatus.ACTIVE);
         verify(ticketRepository).countByStatus(TicketStatus.COMPLETED);
-        verify(entryRepository).countByDateAfter(any(OffsetDateTime.class));
+        verify(entryRepository).countByDateAfter(any(LocalDate.class));
 
         // Assert active tickets mapped
         assertNotNull(result.getActiveTickets());
@@ -159,7 +159,7 @@ class DashboardServiceImplTest {
         // Counts
         when(ticketRepository.countByStatus(TicketStatus.ACTIVE)).thenReturn(0L);
         when(ticketRepository.countByStatus(TicketStatus.COMPLETED)).thenReturn(0L);
-        when(entryRepository.countByDateAfter(any(OffsetDateTime.class))).thenReturn(0L);
+        when(entryRepository.countByDateAfter(any(LocalDate.class))).thenReturn(0L);
 
         DashboardHomeResponse result = dashboardService.getHomePage();
 

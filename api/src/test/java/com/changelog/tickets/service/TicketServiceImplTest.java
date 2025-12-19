@@ -27,7 +27,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 
-import java.time.OffsetDateTime;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -66,7 +66,7 @@ class TicketServiceImplTest {
                 .slug("refactor-reevaluation-processor")
                 .title("Refactor reevaluation processor")
                 .status(TicketStatus.ACTIVE)
-                .startDate(OffsetDateTime.parse("2025-12-10T14:30:00Z"))
+                .startDate(LocalDate.of(2025, 12, 10))
                 .build();
 
         TicketSummaryResponse mockSummary = TicketSummaryResponse.builder()
@@ -107,7 +107,7 @@ class TicketServiceImplTest {
                 .slug("some-other-ticket")
                 .title("Some other ticket")
                 .status(TicketStatus.COMPLETED)
-                .startDate(OffsetDateTime.parse("2025-12-09T10:00:00Z"))
+                .startDate(LocalDate.of(2025, 12, 9))
                 .build();
 
         Page<Ticket> page = new PageImpl<>(List.of(ticket), pageable, 1);
@@ -134,7 +134,7 @@ class TicketServiceImplTest {
         request.setSlug("refactor-reevaluation-processor");
         request.setStatus(TicketStatus.ACTIVE);
         request.setVisibility("P");
-        request.setStartDate(OffsetDateTime.parse("2025-12-10T14:30:00Z"));
+        request.setStartDate(LocalDate.of(2025, 12, 10));
         request.setEndDate(null);
         request.setBackground("Background");
         request.setTechnologies(new String[]{"Java", "Spring Boot"});
@@ -192,7 +192,7 @@ class TicketServiceImplTest {
                 .title("Refactor reevaluation processor")
                 .status(TicketStatus.ACTIVE)
                 .visibility("P")
-                .startDate(OffsetDateTime.parse("2025-12-10T14:30:00Z"))
+                .startDate(LocalDate.of(2025, 12, 10))
                 .background("Background")
                 .technologies(new String[]{"Java", "Spring Boot"})
                 .learned("Learned stuff")
@@ -230,7 +230,7 @@ class TicketServiceImplTest {
 
         Entry entry1 = Entry.builder()
                 .id(443682370L)
-                .date(OffsetDateTime.parse("2025-12-10T17:30:00Z"))
+                .date(LocalDate.of(2025, 12, 10))
                 .title("Identified bottlenecks")
                 .body("Found inefficient JPA queries.")
                 .technologies(new String[]{"Spring Boot", "PostgreSQL"})
@@ -239,7 +239,7 @@ class TicketServiceImplTest {
 
         Entry entry2 = Entry.builder()
                 .id(443682371L)
-                .date(OffsetDateTime.parse("2025-12-11T15:00:00Z"))
+                .date(LocalDate.of(2025, 12, 11))
                 .title("Implemented batching")
                 .body("Reduced DB calls.")
                 .technologies(new String[]{"Hibernate"})
@@ -252,8 +252,8 @@ class TicketServiceImplTest {
                 .title("Refactor reevaluation processor")
                 .status(TicketStatus.COMPLETED)
                 .visibility("Public")
-                .startDate(OffsetDateTime.parse("2025-12-10T14:30:00Z"))
-                .endDate(OffsetDateTime.parse("2025-12-12T18:00:00Z"))
+                .startDate(LocalDate.of(2025, 12, 10))
+                .endDate(LocalDate.of(2025, 12, 12))
                 .background("Background text")
                 .technologies(new String[]{"Java", "Spring Boot"})
                 .learned("Learned advanced batching strategies.")
@@ -321,7 +321,7 @@ class TicketServiceImplTest {
                 .title("Refactor reevaluation processor")
                 .status(TicketStatus.ACTIVE)
                 .visibility("P")
-                .startDate(OffsetDateTime.parse("2025-12-10T14:30:00Z"))
+                .startDate(LocalDate.of(2025, 12, 10))
                 .build();
 
         UpdateTicketRequest request = new UpdateTicketRequest();
@@ -330,7 +330,7 @@ class TicketServiceImplTest {
         request.setStatus(TicketStatus.COMPLETED);
         request.setVisibility("P");
         request.setStartDate(existing.getStartDate());
-        request.setEndDate(OffsetDateTime.parse("2025-12-12T18:00:00Z"));
+        request.setEndDate(LocalDate.of(2025, 12, 12));
         request.setLearned("Learned advanced batching strategies.");
         request.setRoadblocksSummary("Some roadblocks.");
         request.setMetricsSummary("Cut from 15m to 30s.");

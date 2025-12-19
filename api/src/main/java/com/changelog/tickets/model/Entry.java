@@ -5,6 +5,7 @@ import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
 
 @Entity
@@ -25,7 +26,7 @@ public class Entry {
     private Ticket ticket;
 
     @Column(name = "date", nullable = false)
-    private OffsetDateTime date;
+    private LocalDate date;
 
     @Column(name = "title")
     private String title;

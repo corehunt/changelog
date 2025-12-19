@@ -12,7 +12,7 @@ import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.time.OffsetDateTime;
+import java.time.LocalDate;
 import java.util.List;
 
 import static org.hamcrest.Matchers.is;
@@ -51,7 +51,7 @@ class EntryControllerTest {
                                 .title("Identified bottlenecks in reevaluation job")
                                 .body("Found inefficient JPA queries.")
                                 .technologies(new String[]{"Spring Boot", "PostgreSQL"})
-                                .date(OffsetDateTime.parse("2025-12-10T17:30:00Z"))
+                                .date(LocalDate.of(2025, 12, 10))
                                 .visibility("Public")
                                 .build()
                 ))
@@ -103,7 +103,7 @@ class EntryControllerTest {
         request.setTitle("Identified bottlenecks");
         request.setBody("Initial analysis of reevaluation job");
         request.setTechnologies(new String[]{"Spring Boot", "Hibernate"});
-        request.setDate(OffsetDateTime.parse("2025-12-10T17:30:00Z"));
+        request.setDate(LocalDate.of(2025, 12, 10));
         request.setVisibility("Public");
 
         EntrySummaryResponse created = EntrySummaryResponse.builder()
@@ -137,7 +137,7 @@ class EntryControllerTest {
         request.setTitle("Updated title");
         request.setBody("Updated body");
         request.setTechnologies(new String[]{"Spring Boot"});
-        request.setDate(OffsetDateTime.parse("2025-12-11T12:00:00Z"));
+        request.setDate(LocalDate.of(2025, 12, 10));
         request.setVisibility("Public");
 
         EntryDetailResponse response = EntryDetailResponse.builder()

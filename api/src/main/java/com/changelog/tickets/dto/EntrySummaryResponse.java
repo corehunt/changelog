@@ -3,7 +3,7 @@ package com.changelog.tickets.dto;
 import lombok.Builder;
 import lombok.Data;
 
-import java.time.OffsetDateTime;
+import java.time.LocalDate;
 
 @Data
 @Builder
@@ -14,6 +14,6 @@ public class EntrySummaryResponse {
     private String title;
     private String body;
     private String[] technologies;
-    private OffsetDateTime date;
+    private LocalDate date;
     private String visibility;
 }

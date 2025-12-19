@@ -56,16 +56,8 @@ export function TicketCard({ ticket }: TicketCardProps) {
               className="text-xs sm:text-sm font-mono"
               style={{ color: THEME.colors.text.secondary }}
             >
-              {new Date(ticket.startDate).toLocaleDateString('en-US', {
-                month: 'short',
-                day: 'numeric',
-                year: 'numeric'
-              })}
-              {ticket.endDate && ` - ${new Date(ticket.endDate).toLocaleDateString('en-US', {
-                month: 'short',
-                day: 'numeric',
-                year: 'numeric'
-              })}`}
+              {new Date(ticket.startDate).toDateString()}
+              {ticket.endDate && ` - ${new Date(ticket.endDate).toDateString()}`}
             </span>
           </div>
           <div className="flex items-center gap-1">

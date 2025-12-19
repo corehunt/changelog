@@ -2,13 +2,13 @@ package com.changelog.tickets.dto;
 
 import lombok.Data;
 
-import java.time.OffsetDateTime;
+import java.time.LocalDate;
 
 @Data
 public class UpdateEntryRequest {
     private Long id;
     private Long ticketId;
-    private OffsetDateTime date;
+    private LocalDate date;
     private String title;
     private String body;
     private String[] technologies;

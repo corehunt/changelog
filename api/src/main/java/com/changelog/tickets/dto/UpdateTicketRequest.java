@@ -3,7 +3,7 @@ package com.changelog.tickets.dto;
 import com.changelog.tickets.model.TicketStatus;
 import lombok.Data;
 
-import java.time.OffsetDateTime;
+import java.time.LocalDate;
 
 @Data
 public class UpdateTicketRequest {
@@ -11,8 +11,8 @@ public class UpdateTicketRequest {
     private String title;
     private TicketStatus status;
     private String visibility;
-    private OffsetDateTime startDate;
-    private OffsetDateTime endDate;
+    private LocalDate startDate;
+    private LocalDate endDate;
     private String background;
     private String[] technologies;
     private String learned;

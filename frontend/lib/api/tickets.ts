@@ -33,6 +33,7 @@ type BackendTicketSummaryResponse = {
   id: number;
   slug: string;
   title: string;
+  background?: string | null;
   status: TicketStatus;
   startDate: string;
   endDate?: string | null;
@@ -91,6 +92,7 @@ function mapBackendSummaryToTicket(dto: BackendTicketSummaryResponse): Ticket {
     id: String(dto.id),
     slug: dto.slug,
     title: dto.title,
+    background: dto.background ?? undefined,
     status: dto.status,
     startDate: dto.startDate,
     endDate: dto.endDate ?? undefined,

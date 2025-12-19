@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
-import java.time.OffsetDateTime;
+import java.time.LocalDate;
 
 @Data
 public class CreateTicketRequest {
@@ -16,8 +16,8 @@ public class CreateTicketRequest {
     @NotNull
     private TicketStatus status;
     private String visibility;
-    private OffsetDateTime startDate;
-    private OffsetDateTime endDate;
+    private LocalDate startDate;
+    private LocalDate endDate;
     private String background;
     private String[] technologies;
 

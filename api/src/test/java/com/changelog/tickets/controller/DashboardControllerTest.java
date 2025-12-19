@@ -12,7 +12,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.time.OffsetDateTime;
+import java.time.LocalDate;
 import java.util.List;
 
 import static org.hamcrest.Matchers.is;
@@ -45,7 +45,7 @@ class DashboardControllerTest {
                 .slug("refactor-reevaluation-processor")
                 .title("Refactor reevaluation processor")
                 .status(TicketStatus.ACTIVE)
-                .startDate(OffsetDateTime.parse("2025-12-10T14:30:00Z"))
+                .startDate(LocalDate.of(2025, 12, 10))
                 .build();
 
         EntrySummaryResponse recentEntry = EntrySummaryResponse.builder()
@@ -55,7 +55,7 @@ class DashboardControllerTest {
                 .title("Identified bottlenecks")
                 .body("Found inefficient JPA queries.")
                 .technologies(new String[]{"Spring Boot", "PostgreSQL"})
-                .date(OffsetDateTime.parse("2025-12-10T17:30:00Z"))
+                .date(LocalDate.of(2025, 12, 10))
                 .visibility("Public")
                 .build();
 
@@ -63,7 +63,7 @@ class DashboardControllerTest {
                 .activeTickets(1)
                 .completedTickets(3)
                 .logsThisWeek(12)
-                .lastUpdate(OffsetDateTime.parse("2025-12-12T18:00:00Z"))
+                .lastUpdate(LocalDate.of(2025, 12, 12))
                 .build();
 
         DashboardHomeResponse response = DashboardHomeResponse.builder()
@@ -85,6 +85,6 @@ class DashboardControllerTest {
                 .andExpect(jsonPath("$.metrics.activeTickets", is(1)))
                 .andExpect(jsonPath("$.metrics.completedTickets", is(3)))
                 .andExpect(jsonPath("$.metrics.logsThisWeek", is(12)))
-                .andExpect(jsonPath("$.metrics.lastUpdate", is("2025-12-12T18:00:00Z")));
+                .andExpect(jsonPath("$.metrics.lastUpdate", is("2025-12-12")));
     }
 }

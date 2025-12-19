@@ -6,7 +6,7 @@ import com.changelog.tickets.model.Ticket;
 import com.changelog.tickets.model.TicketStatus;
 import org.junit.jupiter.api.Test;
 
-import java.time.OffsetDateTime;
+import java.time.LocalDate;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -22,7 +22,7 @@ class TicketMapperTest {
                 .title("Refactor reevaluation processor")
                 .status(TicketStatus.ACTIVE)
                 .visibility("Public")
-                .startDate(OffsetDateTime.parse("2025-12-10T14:30:00Z"))
+                .startDate(LocalDate.of(2025, 12, 1))
                 .build();
 
         TicketSummaryResponse result = mapper.toSummary(ticket);
@@ -42,8 +42,8 @@ class TicketMapperTest {
                 .title("Some ticket")
                 .status(TicketStatus.COMPLETED)
                 .visibility("Public")
-                .startDate(OffsetDateTime.parse("2025-12-01T10:00:00Z"))
-                .endDate(OffsetDateTime.parse("2025-12-02T18:00:00Z"))
+                .startDate(LocalDate.of(2025, 12, 1))
+                .endDate(LocalDate.of(2025, 12, 2))
                 .background("Background")
                 .technologies(new String[]{"Java", "Spring Boot"})
                 .learned("Learned stuff")

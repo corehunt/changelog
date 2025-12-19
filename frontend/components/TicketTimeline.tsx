@@ -19,17 +19,33 @@ function getStatusColor(status: Ticket["status"]) {
     return THEME.colors.status.completed;
 }
 
+function toLocalDateOnly(dateStr: string): Date {
+    const [y, m, d] = dateStr.split("T")[0].split("-").map(Number);
+    return new Date(y, m - 1, d); // local midnight, no UTC shift
+}
+
+function formatTicketDate(dateStr: string): string {
+    return toLocalDateOnly(dateStr).toLocaleDateString("en-US", {
+        month: "long",
+        day: "numeric",
+        year: "numeric",
+    });
+}
+
 export function TicketTimeline({ tickets }: TicketTimelineProps) {
     if (tickets.length === 0) {
         return (
-            <div
-                className="text-center py-12"
-                style={{ color: THEME.colors.text.muted }}
-            >
+            <div className="text-center py-12" style={{ color: THEME.colors.text.muted }}>
                 No tickets yet
             </div>
         );
     }
+
+    // Newest start date first (descending).
+    const sortedTickets = [...tickets].sort(
+        (a, b) =>
+            toLocalDateOnly(b.startDate).getTime() - toLocalDateOnly(a.startDate).getTime()
+    );
 
     return (
         <div className="relative">
@@ -40,15 +56,12 @@ export function TicketTimeline({ tickets }: TicketTimelineProps) {
             />
 
             <div className="space-y-6 md:space-y-8">
-                {tickets.map((ticket) => {
+                {sortedTickets.map((ticket) => {
                     const isActive = ticket.status === "ACTIVE";
                     const statusColor = getStatusColor(ticket.status);
 
-                    const primaryDate =
-                        !isActive && ticket.endDate ? ticket.endDate : ticket.startDate;
-
-                    const dateLabel =
-                        !isActive && ticket.endDate ? "Completed" : "Started";
+                    const primaryDate = !isActive && ticket.endDate ? ticket.endDate : ticket.startDate;
+                    const dateLabel = !isActive && ticket.endDate ? "Completed" : "Started";
 
                     return (
                         <div key={ticket.id} className="relative pl-6 md:pl-8">
@@ -71,16 +84,8 @@ export function TicketTimeline({ tickets }: TicketTimelineProps) {
                                 <div className="flex items-center gap-3 mb-2">
                                     <Calendar size={14} style={{ color: THEME.colors.text.muted }} />
 
-                                    <span
-                                        className="text-sm font-mono"
-                                        style={{ color: THEME.colors.text.secondary }}
-                                    >
-                    {dateLabel}:{" "}
-                                        {new Date(primaryDate).toLocaleDateString("en-US", {
-                                            month: "short",
-                                            day: "numeric",
-                                            year: "numeric",
-                                        })}
+                                    <span className="text-sm font-mono" style={{ color: THEME.colors.text.secondary }}>
+                    {dateLabel}: {formatTicketDate(primaryDate)}
                   </span>
 
                                     {/* Neutral badge, colored text + icon */}
@@ -93,11 +98,7 @@ export function TicketTimeline({ tickets }: TicketTimelineProps) {
                                             border: `1px solid ${THEME.colors.border.subtle}`,
                                         }}
                                     >
-                    {isActive ? (
-                        <CircleDot size={14} />
-                    ) : (
-                        <CheckCircle2 size={14} />
-                    )}
+                    {isActive ? <CircleDot size={14} /> : <CheckCircle2 size={14} />}
                                         {ticket.status}
                   </span>
                                 </div>
@@ -110,26 +111,11 @@ export function TicketTimeline({ tickets }: TicketTimelineProps) {
                                     {ticket.title}
                                 </h3>
 
-                                {/* Date range */}
-                                <div
-                                    className="text-xs font-mono mb-3"
-                                    style={{ color: THEME.colors.text.muted }}
-                                >
-                                    {new Date(ticket.startDate).toLocaleDateString("en-US", {
-                                        month: "short",
-                                        day: "numeric",
-                                        year: "numeric",
-                                    })}
-                                    {ticket.endDate
-                                        ? ` → ${new Date(ticket.endDate).toLocaleDateString(
-                                            "en-US",
-                                            {
-                                                month: "short",
-                                                day: "numeric",
-                                                year: "numeric",
-                                            }
-                                        )}`
-                                        : " → Present"}
+                                {/* Background description */}
+                                <div className="text-xs font-mono mb-3" style={{ color: THEME.colors.text.muted }}>
+                                    <p className="text-xs font-mono mb-3 line-clamp-3" style={{ color: THEME.colors.text.muted }}>
+                                        {ticket.background}
+                                    </p>
                                 </div>
 
                                 {/* Technologies */}

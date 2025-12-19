@@ -36,6 +36,7 @@ public class TicketMapper {
                 .id(ticket.getId())
                 .slug(ticket.getSlug())
                 .title(ticket.getTitle())
+                .background(ticket.getBackground())
                 .status(ticket.getStatus())
                 .startDate(ticket.getStartDate())
                 .endDate(ticket.getEndDate())

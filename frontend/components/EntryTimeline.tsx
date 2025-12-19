@@ -14,6 +14,20 @@ interface EntryTimelineProps {
     getTicketSlug?: (ticketId: string) => string | undefined;
 }
 
+function toLocalDateOnly(dateStr: string): Date {
+    // Supports "YYYY-MM-DD" and "YYYY-MM-DDTHH:mm:ss..." by stripping time.
+    const [y, m, d] = dateStr.split("T")[0].split("-").map(Number);
+    return new Date(y, m - 1, d);
+}
+
+function formatEntryDate(dateStr: string): string {
+    return toLocalDateOnly(dateStr).toLocaleDateString("en-US", {
+        month: "long",
+        day: "numeric",
+        year: "numeric",
+    });
+}
+
 function getDotColor(ticketStatus?: TicketStatus) {
     if (ticketStatus === "COMPLETED") return THEME.colors.status.completed;
     return THEME.colors.accent.primary;
@@ -36,6 +50,12 @@ export function EntryTimeline({
 
     const dotColor = getDotColor(ticketStatus);
 
+    const sortedEntries = [...entries].sort(
+        (a, b) =>
+            toLocalDateOnly(b.date).getTime() -
+            toLocalDateOnly(a.date).getTime()
+    );
+
     return (
         <div className="relative">
             <div
@@ -44,8 +64,9 @@ export function EntryTimeline({
             />
 
             <div className="space-y-6 md:space-y-8">
-                {entries.map((entry) => {
-                    const ticketSlug = entry.ticketSlug || getTicketSlug?.(entry.ticketSlug);
+                {sortedEntries.map((entry) => {
+                    const ticketSlug =
+                        entry.ticketSlug || getTicketSlug?.(entry.ticketSlug);
 
                     const entryContent = (
                         <>
@@ -57,11 +78,7 @@ export function EntryTimeline({
                                             className="text-sm font-mono"
                                             style={{ color: THEME.colors.text.secondary }}
                                         >
-                      {new Date(entry.date).toLocaleDateString('en-US', {
-                          month: 'short',
-                          day: 'numeric',
-                          year: 'numeric',
-                      })}
+                      {formatEntryDate(entry.date)}
                     </span>
                                     </div>
 
@@ -70,7 +87,9 @@ export function EntryTimeline({
                                             className="text-xs font-mono mb-2"
                                             style={{ color: THEME.colors.text.muted }}
                                         >
-                                            {getTicketTitle ? getTicketTitle(entry.ticketName) : entry.ticketName}
+                                            {getTicketTitle
+                                                ? getTicketTitle(entry.ticketName)
+                                                : entry.ticketName}
                                         </div>
                                     )}
 

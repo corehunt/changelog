@@ -7,6 +7,21 @@ import { THEME } from '@/lib/theme';
 import { getDashboardHome } from '@/lib/api/dashboard';
 import type { Ticket, Entry } from '@/lib/types';
 
+function toLocalDateOnly(dateStr: string): Date {
+  // Supports "YYYY-MM-DD" and "YYYY-MM-DDTHH:mm:ss..." by stripping time.
+  const [y, m, d] = dateStr.split('T')[0].split('-').map(Number);
+  return new Date(y, m - 1, d);
+}
+
+function formatDateOnlyForDisplay(dateStr?: string | null): string {
+  if (!dateStr) return 'No entries';
+  return toLocalDateOnly(dateStr).toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
+}
+
 export default async function Home() {
   const dashboard = await getDashboardHome();
 
@@ -19,7 +34,7 @@ export default async function Home() {
     startDate: t.startDate,
     endDate: t.endDate ?? undefined,
     technologies: t.technologies,
-    isPublic: true, // dashboard summaries don’t include this yet
+    isPublic: true,
   }));
 
   // Only the length is used by SystemStatusPanel
@@ -40,22 +55,16 @@ export default async function Home() {
   // --- Metrics ---
   const logsThisWeek = dashboard.metrics.logsThisWeek;
 
-  const lastUpdate = dashboard.metrics.lastUpdate
-      ? new Date(dashboard.metrics.lastUpdate).toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric',
-      })
-      : 'No entries';
+  const lastUpdate = formatDateOnlyForDisplay(dashboard.metrics.lastUpdate);
 
-  const ticketByTitle = new Map(activeTickets.map((t) => [t.title, t]));
+  const ticketBySlug = new Map(activeTickets.map((t) => [t.slug, t]));
 
-  const getTicketTitle = (ticketId: string) => {
-    return ticketByTitle.get(ticketId)?.title ?? ticketId ?? 'Unknown';
+  const getTicketTitle = (ticketSlug: string) => {
+    return ticketBySlug.get(ticketSlug)?.title ?? ticketSlug ?? 'Unknown';
   };
 
-  const getTicketSlug = (ticketId: string) => {
-    return ticketByTitle.get(ticketId)?.slug;
+  const getTicketSlug = (ticketSlug: string) => {
+    return ticketBySlug.get(ticketSlug)?.slug;
   };
 
   return (

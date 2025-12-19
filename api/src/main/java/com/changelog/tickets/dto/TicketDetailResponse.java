@@ -4,7 +4,7 @@ import com.changelog.tickets.model.TicketStatus;
 import lombok.Builder;
 import lombok.Data;
 
-import java.time.OffsetDateTime;
+import java.time.LocalDate;
 import java.util.List;
 
 @Data
@@ -15,8 +15,8 @@ public class TicketDetailResponse {
     private String title;
     private TicketStatus status;
     private String visibility;
-    private OffsetDateTime startDate;
-    private OffsetDateTime endDate;
+    private LocalDate startDate;
+    private LocalDate endDate;
     private String background;
     private String[] technologies;
     private String learned;

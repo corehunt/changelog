@@ -51,12 +51,12 @@ export function ActiveTicketsPanel({ tickets, showManageButton = false }: Active
                     </h3>
                   </Link>
                   <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mt-2">
-                    <span
-                      className="text-xs font-mono"
-                      style={{ color: THEME.colors.text.muted }}
-                    >
-                      {getDaysAgo(ticket.startDate)}
-                    </span>
+                    {/*<span*/}
+                    {/*  className="text-xs font-mono"*/}
+                    {/*  style={{ color: THEME.colors.text.muted }}*/}
+                    {/*>*/}
+                    {/*  {getDaysAgo(ticket.startDate)}*/}
+                    {/*</span>*/}
                     <span
                       className="text-xs font-mono"
                       style={{ color: THEME.colors.text.secondary }}

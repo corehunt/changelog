@@ -13,7 +13,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
-import java.time.OffsetDateTime;
+import java.time.LocalDate;
 
 @Service
 @RequiredArgsConstructor
@@ -39,14 +39,14 @@ public class DashboardServiceImpl implements DashboardService {
         );
 
         // Query 3: metrics (counts + last update)
-        OffsetDateTime oneWeekAgo = OffsetDateTime.now().minusDays(7);
+        LocalDate oneWeekAgo = LocalDate.now().minusDays(7);
 
         //TODO bring back all tickets and count in memory
         long activeCount = ticketRepository.countByStatus(TicketStatus.ACTIVE);
         long completedCount = ticketRepository.countByStatus(TicketStatus.COMPLETED);
         long logsThisWeek = entryRepository.countByDateAfter(oneWeekAgo);
 
-        OffsetDateTime lastUpdate = recentEntriesPage.getContent().isEmpty()
+        LocalDate lastUpdate = recentEntriesPage.getContent().isEmpty()
                 ? null
                 : recentEntriesPage.getContent().get(0).getDate();
 

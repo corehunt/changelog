@@ -5,6 +5,7 @@ import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -33,10 +34,10 @@ public class Ticket {
     private TicketStatus status;
 
     @Column(name = "start_date", nullable = false)
-    private OffsetDateTime startDate;
+    private LocalDate startDate;
 
     @Column(name = "end_date")
-    private OffsetDateTime endDate;
+    private LocalDate endDate;
 
     @Column(name = "background", columnDefinition = "text")
     private String background;
