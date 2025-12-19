@@ -1,5 +1,5 @@
 // frontend/lib/api/entries.ts
-import { authedGet, authedPut } from "../http";
+import { authedDelete, authedGet, authedPut } from "../http";
 import { Entry } from "../types";
 
 export type EntrySummaryResponse = {
@@ -51,7 +51,7 @@ export async function getEntriesForTicket(ticketId: string | number): Promise<En
 }
 
 /**
- * PUT /api/v1/entries/{id}
+ * PUT /api/v1/entries/{entryId}
  * Updates an existing entry.
  */
 export async function updateEntry(entryId: string | number, payload: UpdateEntryPayload) {
@@ -65,4 +65,12 @@ export async function updateEntry(entryId: string | number, payload: UpdateEntry
     technologies: dto.technologies ?? [],
     isPublic: dto.visibility === "Public",
   };
+}
+
+/**
+ * DELETE /api/v1/entries/{entryId}
+ * Backend returns 204 No Content
+ */
+export async function deleteEntry(entryId: string | number): Promise<void> {
+  await authedDelete(`/api/v1/entries/${entryId}`);
 }

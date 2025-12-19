@@ -14,7 +14,7 @@ import { ProtectedRoute } from '@/lib/auth/ProtectedRoute';
 import { AUTH_ENABLED } from '@/lib/auth/config';
 
 import { getTicketDetailBySlug } from '@/lib/api/tickets';
-import { getEntriesForTicket, updateEntry } from '@/lib/api/entries';
+import { deleteEntry, getEntriesForTicket, updateEntry } from '@/lib/api/entries';
 
 export default function ManageEntriesPage({ params }: { params: { slug: string } }) {
     const [ticket, setTicket] = useState<{
@@ -29,6 +29,9 @@ export default function ManageEntriesPage({ params }: { params: { slug: string }
     const [dialogOpen, setDialogOpen] = useState(false);
     const [editDialogOpen, setEditDialogOpen] = useState(false);
     const [editingEntry, setEditingEntry] = useState<Entry | null>(null);
+
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const [entryPendingDelete, setEntryPendingDelete] = useState<Entry | null>(null);
 
     const [formData, setFormData] = useState({
         title: '',
@@ -50,11 +53,21 @@ export default function ManageEntriesPage({ params }: { params: { slug: string }
     const [editSaved, setEditSaved] = useState(false);
     const [editSaveError, setEditSaveError] = useState<string | null>(null);
 
+    const [deleteInFlightId, setDeleteInFlightId] = useState<string | null>(null);
+    const [deletedOk, setDeletedOk] = useState(false);
+    const [deleteError, setDeleteError] = useState<string | null>(null);
+
     useEffect(() => {
         if (!editSaved) return;
         const t = setTimeout(() => setEditSaved(false), 1500);
         return () => clearTimeout(t);
     }, [editSaved]);
+
+    useEffect(() => {
+        if (!deletedOk) return;
+        const t = setTimeout(() => setDeletedOk(false), 1500);
+        return () => clearTimeout(t);
+    }, [deletedOk]);
 
     useEffect(() => {
         let cancelled = false;
@@ -77,8 +90,9 @@ export default function ManageEntriesPage({ params }: { params: { slug: string }
                 const e = await getEntriesForTicket(t.id);
                 if (cancelled) return;
 
-                // sort oldest -> newest if you want (your old supabase query did ascending true)
-                const sorted = [...e].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+                const sorted = [...e].sort(
+                    (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+                );
                 setEntries(sorted);
             } finally {
                 if (!cancelled) setLoading(false);
@@ -129,8 +143,9 @@ export default function ManageEntriesPage({ params }: { params: { slug: string }
         setEditFormData({
             title: entry.title || '',
             body: entry.body || '',
-            // normalize to yyyy-MM-dd for <input type="date">
-            date: entry.date ? format(new Date(entry.date), 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd'),
+            date: entry.date
+                ? format(new Date(entry.date), 'yyyy-MM-dd')
+                : format(new Date(), 'yyyy-MM-dd'),
             technologies: entry.technologies ?? [],
             isPublic: entry.isPublic,
         });
@@ -188,9 +203,30 @@ export default function ManageEntriesPage({ params }: { params: { slug: string }
         }
     };
 
-    const handleDeleteClick = async (_entry: Entry) => {
-        // We'll implement DELETE next
-        alert('Delete wiring next.');
+    const handleDeleteClick = (entry: Entry) => {
+        setDeleteError(null);
+        setDeletedOk(false);
+        setEntryPendingDelete(entry);
+        setDeleteDialogOpen(true);
+    };
+
+    const confirmDelete = async () => {
+        if (!entryPendingDelete) return;
+
+        try {
+            setDeleteInFlightId(entryPendingDelete.id);
+            await deleteEntry(entryPendingDelete.id);
+
+            setEntries((prev) => prev.filter((e) => e.id !== entryPendingDelete.id));
+            setDeletedOk(true);
+
+            setDeleteDialogOpen(false);
+            setEntryPendingDelete(null);
+        } catch (err: any) {
+            setDeleteError(err?.message ?? 'Failed to delete entry');
+        } finally {
+            setDeleteInFlightId(null);
+        }
     };
 
     if (loading) {
@@ -252,7 +288,98 @@ export default function ManageEntriesPage({ params }: { params: { slug: string }
                         <Plus size={14} />
                         Add new entry
                     </button>
+
+                    <span
+                        className={`ml-3 text-xs font-mono transition-opacity duration-300 ${
+                            deletedOk ? 'opacity-100' : 'opacity-0'
+                        }`}
+                        style={{
+                            paddingLeft: 10,
+                            borderLeft: `2px solid ${THEME.colors.border.subtle}`,
+                            color: THEME.colors.text.secondary,
+                        }}
+                    >
+            ✓ deleted
+          </span>
+
+                    {deleteError && (
+                        <span className="ml-3 text-xs font-mono" style={{ color: THEME.colors.text.secondary }}>
+              {deleteError}
+            </span>
+                    )}
                 </div>
+
+                 DELETE CONFIRM DIALOG (new)
+                <Dialog
+                    open={deleteDialogOpen}
+                    onOpenChange={(open) => {
+                        setDeleteDialogOpen(open);
+                        if (!open) setEntryPendingDelete(null);
+                    }}
+                >
+                    <DialogContent
+                        className="max-w-lg"
+                        style={{
+                            backgroundColor: THEME.colors.background.secondary,
+                            border: `1px solid ${THEME.colors.border.subtle}`,
+                        }}
+                    >
+                        <DialogHeader>
+                            <DialogTitle
+                                className="text-lg md:text-xl font-mono font-semibold"
+                                style={{ color: THEME.colors.text.primary }}
+                            >
+                                Delete entry?
+                            </DialogTitle>
+                        </DialogHeader>
+
+                        <div className="space-y-4">
+                            <div className="text-sm" style={{ color: THEME.colors.text.secondary }}>
+                                This cannot be undone.
+                            </div>
+
+                            {entryPendingDelete?.title && (
+                                <div
+                                    className="text-xs font-mono"
+                                    style={{
+                                        color: THEME.colors.text.secondary,
+                                        paddingLeft: 10,
+                                        borderLeft: `2px solid ${THEME.colors.border.subtle}`,
+                                    }}
+                                >
+                                    {entryPendingDelete.title}
+                                </div>
+                            )}
+
+                            <div className="flex gap-3 pt-2">
+                                <button
+                                    onClick={confirmDelete}
+                                    disabled={!entryPendingDelete || deleteInFlightId === entryPendingDelete?.id}
+                                    className="px-6 py-3 text-sm transition-opacity hover:opacity-70 disabled:opacity-50"
+                                    style={{
+                                        backgroundColor: THEME.colors.surface.elevated,
+                                        color: THEME.colors.text.primary,
+                                        border: `1px solid ${THEME.colors.border.subtle}`,
+                                    }}
+                                >
+                                    {deleteInFlightId === entryPendingDelete?.id ? 'Deleting…' : 'Delete'}
+                                </button>
+
+                                <button
+                                    onClick={() => setDeleteDialogOpen(false)}
+                                    className="px-6 py-3 text-sm transition-opacity hover:opacity-70"
+                                    style={{
+                                        backgroundColor: THEME.colors.background.secondary,
+                                        color: THEME.colors.text.secondary,
+                                        border: `1px solid ${THEME.colors.border.subtle}`,
+                                    }}
+                                >
+                                    Cancel
+                                </button>
+                            </div>
+                        </div>
+                    </DialogContent>
+                </Dialog>
 
                 {/* Add Dialog (POST later) */}
                 <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -531,10 +658,7 @@ export default function ManageEntriesPage({ params }: { params: { slug: string }
                             <div className="space-y-4">
                                 <div className="flex items-start justify-between gap-4">
                                     <div className="flex-1">
-                                        <div
-                                            className="text-base md:text-lg font-mono font-semibold mb-1"
-                                            style={{ color: THEME.colors.text.primary }}
-                                        >
+                                        <div className="text-base md:text-lg font-mono font-semibold mb-1" style={{ color: THEME.colors.text.primary }}>
                                             {entry.title}
                                         </div>
                                         <div className="text-xs font-mono" style={{ color: THEME.colors.text.secondary }}>
@@ -552,10 +676,11 @@ export default function ManageEntriesPage({ params }: { params: { slug: string }
                                         </button>
                                         <button
                                             onClick={() => handleDeleteClick(entry)}
-                                            className="text-xs font-mono transition-opacity hover:opacity-70"
+                                            disabled={deleteInFlightId === entry.id}
+                                            className="text-xs font-mono transition-opacity hover:opacity-70 disabled:opacity-50"
                                             style={{ color: THEME.colors.text.secondary }}
                                         >
-                                            delete
+                                            {deleteInFlightId === entry.id ? 'deleting…' : 'delete'}
                                         </button>
                                     </div>
                                 </div>
