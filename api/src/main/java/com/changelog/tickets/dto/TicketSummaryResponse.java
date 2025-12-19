@@ -14,6 +14,7 @@ public class TicketSummaryResponse {
     private String title;
     private String background;
     private TicketStatus status;
+    private String visibility;
     private LocalDate startDate;
     private LocalDate endDate;
     private String[] technologies;

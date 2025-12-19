@@ -250,24 +250,34 @@ export function DashboardTicketsList({
                       Status
                     </label>
                     <Select
-                        value={filters.status || (filters.statusNot ? 'not-active' : 'all')}
+                        value={filters.status ?? (filters.statusNot ? 'not-active' : 'all')}
                         onValueChange={(value) => {
-                          if (value === 'all') {
-                            const newFilters = { ...filters };
+                            const newFilters: TicketFilters = { ...filters };
+
+                            if (value === 'all') {
+                                delete newFilters.status;
+                                delete newFilters.statusNot;
+                                onFiltersChange(newFilters);
+                                return;
+                            }
+
+                            if (value === 'not-active') {
+                                delete newFilters.status;
+                                newFilters.statusNot = 'ACTIVE';
+                                onFiltersChange(newFilters);
+                                return;
+                            }
+
+                            if (value === 'ACTIVE' || value === 'COMPLETED' || value === 'ARCHIVED') {
+                                delete newFilters.statusNot;
+                                newFilters.status = value;
+                                onFiltersChange(newFilters);
+                                return;
+                            }
+
                             delete newFilters.status;
                             delete newFilters.statusNot;
                             onFiltersChange(newFilters);
-                          } else if (value === 'not-active') {
-                            const newFilters = { ...filters };
-                            delete newFilters.status;
-                            newFilters.statusNot = 'ACTIVE';
-                            onFiltersChange(newFilters);
-                          } else {
-                            const newFilters = { ...filters };
-                            delete newFilters.statusNot;
-                            newFilters.status = value as TicketStatus;
-                            onFiltersChange(newFilters);
-                          }
                         }}
                     >
                       <SelectTrigger>

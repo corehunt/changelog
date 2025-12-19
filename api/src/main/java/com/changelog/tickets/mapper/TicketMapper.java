@@ -38,6 +38,7 @@ public class TicketMapper {
                 .title(ticket.getTitle())
                 .background(ticket.getBackground())
                 .status(ticket.getStatus())
+                .visibility(ticket.getVisibility())
                 .startDate(ticket.getStartDate())
                 .endDate(ticket.getEndDate())
                 .technologies(ticket.getTechnologies())

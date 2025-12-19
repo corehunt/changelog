@@ -68,7 +68,7 @@ export function ActiveTicketsPanel({ tickets, showManageButton = false }: Active
                 </div>
                 {showManageButton && (
                   <Link
-                    href={`/admin/tickets/${ticket.id}/entries`}
+                    href={`/admin/tickets/${ticket.slug}/entries`}
                     className="flex items-center gap-2 px-4 py-2 text-xs font-mono transition-opacity hover:opacity-70"
                     style={{
                       backgroundColor: THEME.colors.surface.elevated,
