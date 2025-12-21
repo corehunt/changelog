@@ -10,6 +10,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -30,6 +31,7 @@ public class EntryController {
     }
 
     @PostMapping
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<EntrySummaryResponse> createEntry(@Valid @RequestBody CreateEntryRequest request) {
 
         log.info("POST /api/v1/entries request = {}", request);
@@ -43,6 +45,7 @@ public class EntryController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
     public EntryDetailResponse updateEntry(
             @PathVariable Long id,
             @Valid @RequestBody UpdateEntryRequest request) {
@@ -54,6 +57,7 @@ public class EntryController {
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("isAuthenticated()")
     public void deleteEntry(@PathVariable Long id) {
         log.info("DELETE /api/v1/entries request = {}", id);
         entryService.deleteEntry(id);

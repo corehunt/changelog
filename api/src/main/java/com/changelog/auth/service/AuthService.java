@@ -23,21 +23,28 @@ public class AuthService {
     private final JwtService jwt;
 
     public AuthResponse register(RegisterRequest req) {
-        String email = req.getEmail().toLowerCase();
-        if (users.existsByEmail(email)) {
-            throw new IllegalArgumentException("email_already_exists");
-        }
-        User u = User.builder()
-                .email(email)
-                .passwordHash(encoder.encode(req.getPassword()))
-                .build();
-        users.save(u);
+        long userCount = users.count();
 
-        String token = jwt.issue(
-                u.getEmail(),
-                Map.of("uid", u.getUserId().toString(), "role", "USER")
-        );
-        return new AuthResponse(token);
+        if (userCount < 1) {
+            String email = req.getEmail().toLowerCase();
+            if (users.existsByEmail(email)) {
+                throw new IllegalArgumentException("email_already_exists");
+            }
+            User u = User.builder()
+                    .email(email)
+                    .passwordHash(encoder.encode(req.getPassword()))
+                    .build();
+            users.save(u);
+
+            String token = jwt.issue(
+                    u.getEmail(),
+                    Map.of("uid", u.getUserId().toString(), "role", "USER")
+            );
+            return new AuthResponse(token);
+        } else {
+            throw new IllegalStateException("No longer accepting new users. ");
+        }
+
     }
 
     public AuthResponse login(LoginRequest req) {

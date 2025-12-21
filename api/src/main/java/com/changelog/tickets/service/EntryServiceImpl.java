@@ -50,7 +50,6 @@ public class EntryServiceImpl implements EntryService {
 
     @Override
     @Transactional
-//    @PreAuthorize("isAuthenticated()")
     public EntrySummaryResponse createEntry(CreateEntryRequest request) {
         Ticket ticket = ticketRepository.findById(Long.valueOf(request.getTicketId()))
                 .orElseThrow(() -> new TicketNotFoundException(Long.valueOf(request.getTicketId())));

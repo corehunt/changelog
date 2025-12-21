@@ -11,6 +11,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -64,6 +65,7 @@ public class TicketController {
     }
 
     @PostMapping
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<TicketSummaryResponse> createTicket(@Valid @RequestBody CreateTicketRequest request) {
 
         log.info("POST /api/v1/tickets request={}", request);
@@ -88,6 +90,7 @@ public class TicketController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("isAuthenticated()")
     public TicketDetailResponse updateTicket(
             @PathVariable Long id,
             @Valid @RequestBody UpdateTicketRequest request) {
@@ -98,6 +101,7 @@ public class TicketController {
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("isAuthenticated()")
     public void archiveTicket(@PathVariable Long id) {
         log.info("DELETE /api/v1/tickets/{} (soft delete -> ARCHIVED)", id);
         ticketService.archiveTicket(id);
