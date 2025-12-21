@@ -11,6 +11,7 @@ import com.changelog.tickets.repository.TicketRepository;
 import com.changelog.tickets.util.EntryIdGenerator;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -20,6 +21,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class EntryServiceImpl implements EntryService {
 
     private final EntryRepository entryRepository;
@@ -66,6 +68,8 @@ public class EntryServiceImpl implements EntryService {
 
         Entry savedEntry = entryRepository.save(entry);
 
+        log.info("Created entry {} for ticket {}", savedEntry.getId(), savedEntry.getTicket().getId());
+
         return entryMapper.toSummary(savedEntry);
     }
 
@@ -82,6 +86,8 @@ public class EntryServiceImpl implements EntryService {
 
         Entry savedEntry = entryRepository.save(entry);
 
+        log.info("Updated entry {}", savedEntry.getId());
+
         return entryMapper.toDetailResponse(savedEntry);
     }
 
@@ -89,6 +95,8 @@ public class EntryServiceImpl implements EntryService {
         Entry entry = entryRepository.findById(id).orElseThrow(() -> new EntryNotFoundException(id));
 
         entryRepository.delete(entry);
+
+        log.info("Deleted entry {}", id);
     }
 
 }

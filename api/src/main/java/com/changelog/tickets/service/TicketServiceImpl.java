@@ -68,6 +68,8 @@ public class TicketServiceImpl implements TicketService {
 
         Ticket savedTicket = ticketRepository.save(ticket);
 
+        log.info("Created ticket {}", savedTicket.getId());
+
         return ticketMapper.toSummary(savedTicket);
     }
 
@@ -110,6 +112,8 @@ public class TicketServiceImpl implements TicketService {
 
         Ticket savedTicket = ticketRepository.save(ticket);
 
+        log.info("Updated ticket {}", savedTicket.getId());
+
         return ticketMapper.toDetailResponse(savedTicket);
     }
 
@@ -119,6 +123,8 @@ public class TicketServiceImpl implements TicketService {
 
         ticket.setStatus(TicketStatus.ARCHIVED);
         ticketRepository.save(ticket);
+
+        log.info("Archived ticket {}", ticket.getId());
     }
 
     @Override
