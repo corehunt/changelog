@@ -7,7 +7,7 @@ export function SocialIcons() {
   return (
     <div className="flex items-center gap-3">
       <a
-        href="https://www.linkedin.com/in/coreyroach"
+        href="https://www.linkedin.com/in/coreyroach1"
         target="_blank"
         rel="noopener noreferrer"
         className="flex items-center justify-center w-9 h-9 transition-all"
@@ -28,7 +28,7 @@ export function SocialIcons() {
         <Linkedin size={18} />
       </a>
       <a
-        href="https://github.com/coreyroach"
+        href="https://github.com/corehunt"
         target="_blank"
         rel="noopener noreferrer"
         className="flex items-center justify-center w-9 h-9 transition-all"
@@ -49,7 +49,7 @@ export function SocialIcons() {
         <Github size={18} />
       </a>
       <a
-        href="mailto:corey.roach@gmail.com"
+        href="mailto:coreyhroach@gmail.com"
         className="flex items-center justify-center w-9 h-9 transition-all"
         style={{
           border: `1px solid ${THEME.colors.border.subtle}`,

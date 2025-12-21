@@ -73,7 +73,7 @@ export default async function Home() {
           <div className="py-12">
             <PageHeader
                 title="Ticket Dashboard"
-                subtitle="A chronicle of engineering work, technical decisions, and their outcomes."
+                subtitle="Structured log of engineering work, technical decisions, and their outcomes"
             />
             <div
                 className="h-px max-w-xs mt-4"

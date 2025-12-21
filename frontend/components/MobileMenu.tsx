@@ -11,9 +11,9 @@ export function MobileMenu() {
   const pathname = usePathname();
 
   const links = [
-    { href: '/', label: 'Tickets' },
-    { href: '/timeline', label: 'Timeline' },
-    { href: '/about', label: 'About' },
+    { href: '/', label: 'tickets/' },
+    { href: '/timeline', label: 'timeline/' },
+    { href: '/about', label: 'about/' },
   ];
 
   const toggleMenu = () => setIsOpen(!isOpen);

@@ -41,7 +41,7 @@ export default function LoginPage() {
             <div className="w-full max-w-md">
                 <SectionCard>
                     <div className="text-center">
-                        <PageHeader title=">_changelog" />
+                        <PageHeader title=">_ changelog/" />
                     </div>
                     <form onSubmit={handleSubmit} className="space-y-6">
                         <div>
