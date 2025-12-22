@@ -1,8 +1,8 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/changelog
-    username: app_user
-    password: password
+    url: ${DB_URL}
+    username: ${DB_USER}
+    password: ${DB_PASS}
   jpa:
     hibernate:
       ddl-auto: validate
@@ -35,11 +35,11 @@ info:
     version: ${APP_VERSION:dev}
 
 changelog:
-  allowed-origins: http://localhost:3000
+  allowed-origins: ${HB_ALLOWED_ORIGINS}
   timezone-default: America/New_York
 
 security:
   jwt:
-    signing-key: "dev-32-byte-minimum-base64-or-raw-secret-change-me"
+    signing-key: ${JWT_SIGNING_KEY}
     issuer: "changelog"
     access-token-ttl-minutes: 60

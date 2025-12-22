@@ -36,7 +36,7 @@ info:
 
 changelog:
   allowed-origins: ${HB_ALLOWED_ORIGINS}
-  timezone-default: ${HB_TIMEZONE_DEFAULT:UTC}
+  timezone-default: America/New_York
 
 security:
   jwt:
