@@ -1,0 +1,155 @@
+name: backend-ci
+
+on:
+  pull_request:
+    branches: [ "main" ]
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: "Version bump type"
+        required: true
+        default: "patch"
+        type: choice
+        options:
+          - patch
+          - major
+
+permissions:
+  contents: write     # needed to push tags + create GitHub Releases
+  packages: write     # needed to push to GHCR
+
+concurrency:
+  group: backend-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+  API_DIR: api
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ${{ env.API_DIR }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: maven
+
+      - name: mvn test
+        run: mvn -B test
+
+  release-build-push:
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.event_name != 'pull_request'
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      major_minor: ${{ steps.version.outputs.major_minor }}
+      major: ${{ steps.version.outputs.major }}
+      shortsha: ${{ steps.sha.outputs.shortsha }}
+
+    steps:
+      - name: Checkout (full history + tags)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Compute short SHA
+        id: sha
+        run: echo "shortsha=$(echo $GITHUB_SHA | cut -c1-7)" >> $GITHUB_OUTPUT
+
+      - name: Compute next version (auto patch; manual major)
+        id: version
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          git fetch --tags --force
+
+          # Find latest v*.*.* tag (if any)
+          LATEST_TAG="$(git tag -l 'v*.*.*' --sort=-v:refname | head -n 1 || true)"
+
+          BUMP="${{ github.event.inputs.bump || 'patch' }}"
+
+          if [ -z "$LATEST_TAG" ]; then
+            NEXT="v1.0.0"
+          else
+            ver="${LATEST_TAG#v}"
+            IFS='.' read -r MA MI PA <<< "$ver"
+
+            if [ "$BUMP" = "major" ]; then
+              MA=$((MA+1))
+              MI=0
+              PA=0
+            else
+              PA=$((PA+1))
+            fi
+
+            NEXT="v${MA}.${MI}.${PA}"
+          fi
+
+          echo "Next version: $NEXT"
+          echo "version=$NEXT" >> $GITHUB_OUTPUT
+
+          # Derived tags
+          ver="${NEXT#v}"
+          IFS='.' read -r MA MI PA <<< "$ver"
+          echo "major_minor=v${MA}.${MI}" >> $GITHUB_OUTPUT
+          echo "major=v${MA}" >> $GITHUB_OUTPUT
+
+      - name: Create and push git tag
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          TAG="${{ steps.version.outputs.version }}"
+
+          # Avoid failing if tag already exists for any reason
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
+            echo "Tag $TAG already exists; skipping tag creation."
+            exit 0
+          fi
+
+          git tag -a "$TAG" -m "Release $TAG"
+          git push origin "$TAG"
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push image (main + sha + semver tags)
+        uses: docker/build-push-action@v6
+        with:
+          context: ./${{ env.API_DIR }}
+          file: ./${{ env.API_DIR }}/Dockerfile
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:main
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:sha-${{ steps.sha.outputs.shortsha }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.version }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.major_minor }}
+            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.major }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.version }}
+          generate_release_notes: true
