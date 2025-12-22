@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+    http://www.liquibase.org/xml/ns/dbchangelog
+    http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.24.xsd">
+
+    <changeSet id="v1-create-cl_ticket-indexes" author="coreyroach">
+        <sqlFile path="db/changelog/v1/index/v1-create-cl_ticket-indexes.sql" relativeToChangelogFile="false"/>
+    </changeSet>
+
+    <changeSet id="v1-create-cl_entry-indexes" author="coreyroach">
+        <sqlFile path="db/changelog/v1/index/v1-create-cl_entry-indexes.sql" relativeToChangelogFile="false"/>
+    </changeSet>
+
+</databaseChangeLog>

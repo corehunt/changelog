@@ -5,13 +5,15 @@ spring:
     password: password
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
     properties:
       hibernate.jdbc.time_zone: UTC
     open-in-view: false
     show-sql: false
   liquibase:
-    enabled: false
+    enabled: true
+    change-log: classpath:db/changelog/master-changelog.xml
+    contexts: dev,prod
 
 management.endpoints.web.exposure.include: health,info,metrics
 
