@@ -2,9 +2,15 @@ name: backend-ci
 
 on:
   pull_request:
-    branches: [ "master" ]
+    branches: ["master"]
+    paths:
+      - "api/**"
+      - ".github/workflows/backend-ci.yml"
   push:
-    branches: [ "master" ]
+    branches: ["master"]
+    paths:
+      - "api/**"
+      - ".github/workflows/backend-ci.yml"
   workflow_dispatch:
     inputs:
       bump:
@@ -17,8 +23,8 @@ on:
           - major
 
 permissions:
-  contents: write     # needed to push tags + create GitHub Releases
-  packages: write     # needed to push to GHCR
+  contents: write
+  packages: write
 
 concurrency:
   group: backend-ci-${{ github.ref }}
@@ -32,6 +38,8 @@ env:
 jobs:
   test:
     runs-on: ubuntu-latest
+    # Skip CI runs triggered by our own version-bump commit
+    if: github.event_name != 'push' || !contains(github.event.head_commit.message, '[skip ci]')
     defaults:
       run:
         working-directory: ${{ env.API_DIR }}
@@ -50,12 +58,8 @@ jobs:
   release-build-push:
     runs-on: ubuntu-latest
     needs: test
-    if: github.event_name != 'pull_request'
-    outputs:
-      version: ${{ steps.version.outputs.version }}
-      major_minor: ${{ steps.version.outputs.major_minor }}
-      major: ${{ steps.version.outputs.major }}
-      shortsha: ${{ steps.sha.outputs.shortsha }}
+    # Only run on non-PR events, and skip the bot bump commit loop
+    if: github.event_name != 'pull_request' && (github.event_name != 'push' || !contains(github.event.head_commit.message, '[skip ci]'))
 
     steps:
       - name: Checkout (full history + tags)
@@ -63,21 +67,14 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Compute short SHA
-        id: sha
-        run: echo "shortsha=$(echo $GITHUB_SHA | cut -c1-7)" >> $GITHUB_OUTPUT
-
       - name: Compute next version (auto patch; manual major)
         id: version
         shell: bash
         run: |
           set -euo pipefail
-
           git fetch --tags --force
 
-          # Find latest v*.*.* tag (if any)
           LATEST_TAG="$(git tag -l 'v*.*.*' --sort=-v:refname | head -n 1 || true)"
-
           BUMP="${{ github.event.inputs.bump || 'patch' }}"
 
           if [ -z "$LATEST_TAG" ]; then
@@ -87,9 +84,7 @@ jobs:
             IFS='.' read -r MA MI PA <<< "$ver"
 
             if [ "$BUMP" = "major" ]; then
-              MA=$((MA+1))
-              MI=0
-              PA=0
+              MA=$((MA+1)); MI=0; PA=0
             else
               PA=$((PA+1))
             fi
@@ -97,31 +92,62 @@ jobs:
             NEXT="v${MA}.${MI}.${PA}"
           fi
 
-          echo "Next version: $NEXT"
           echo "version=$NEXT" >> $GITHUB_OUTPUT
+          echo "Next version: $NEXT"
 
-          # Derived tags
-          ver="${NEXT#v}"
-          IFS='.' read -r MA MI PA <<< "$ver"
-          echo "major_minor=v${MA}.${MI}" >> $GITHUB_OUTPUT
-          echo "major=v${MA}" >> $GITHUB_OUTPUT
-
-      - name: Create and push git tag
+      - name: Bump api/pom.xml version + commit back to master
+        shell: bash
         run: |
           set -euo pipefail
+
+          VERSION="${{ steps.version.outputs.version }}"
+          POM_VERSION="${VERSION#v}"
+
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          TAG="${{ steps.version.outputs.version }}"
+          cd "${{ env.API_DIR }}"
 
-          # Avoid failing if tag already exists for any reason
-          if git rev-parse "$TAG" >/dev/null 2>&1; then
-            echo "Tag $TAG already exists; skipping tag creation."
+          # Set Maven project version (no backup poms)
+          mvn -B versions:set -DnewVersion="${POM_VERSION}" -DgenerateBackupPoms=false
+
+          cd ..
+
+          # Commit only if pom changed
+          if git diff --quiet; then
+            echo "No changes detected after versions:set; continuing."
+          else
+            git add "${{ env.API_DIR }}/pom.xml"
+            git commit -m "ci: bump api version to ${VERSION} [skip ci]"
+            git push origin HEAD:master
+          fi
+
+      - name: Tag the version (on the bumped commit) and push tag
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION="${{ steps.version.outputs.version }}"
+
+          # Ensure we tag the latest master (including the bump commit we just pushed)
+          git fetch origin master --force
+          git checkout master
+          git reset --hard origin/master
+
+          if git rev-parse "$VERSION" >/dev/null 2>&1; then
+            echo "Tag $VERSION already exists; skipping."
             exit 0
           fi
 
-          git tag -a "$TAG" -m "Release $TAG"
-          git push origin "$TAG"
+          git tag -a "$VERSION" -m "Release $VERSION"
+          git push origin "$VERSION"
+
+      - name: Compute short SHA (of the release commit)
+        id: sha
+        shell: bash
+        run: |
+          set -euo pipefail
+          SHORTSHA="$(git rev-parse --short=7 HEAD)"
+          echo "shortsha=$SHORTSHA" >> $GITHUB_OUTPUT
 
       - name: Log in to GHCR
         uses: docker/login-action@v3
@@ -133,7 +159,7 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Build and push image (master + sha + semver tags)
+      - name: Build and push image (master + sha)
         uses: docker/build-push-action@v6
         with:
           context: ./${{ env.API_DIR }}
@@ -142,9 +168,6 @@ jobs:
           tags: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:master
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:sha-${{ steps.sha.outputs.shortsha }}
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.version }}
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.major_minor }}
-            ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.major }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
