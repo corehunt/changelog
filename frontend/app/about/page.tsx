@@ -36,8 +36,9 @@ export default function AboutPage() {
                     className="text-base md:text-lg leading-relaxed mb-6"
                     style={{color: THEME.colors.text.secondary}}
                 >
-                    I built this site as a personal record of how I work. Especially how I solve problems,
-                    make decisions, and measure the impact of the things I build.
+                    I care about understanding why things work and why they sometimes don&#39;t.
+                    I&#39;m most engaged when working through ambiguity, testing assumptions, and leaving
+                    codebases in a better state than when I found them.
                 </p>
             </section>
 
@@ -53,16 +54,15 @@ export default function AboutPage() {
                     className="text-base md:text-lg leading-relaxed mb-6"
                     style={{color: THEME.colors.text.secondary}}
                 >
-                    This log is my public representation of capturing and tracking the work
-                    I do in real time. It serves as a way to keep myself accountable to what
-                    I&#39;ve completed, reflect on my decisions, and document their impact.
+                    This is a public log of the work I do in real time that captures what I build, the
+                    decisions I make, and the impact those decisions have. It keeps me accountable
+                    and creates a clear record of outcomes and reasoning.
                 </p>
                 <p className="text-base md:text-lg leading-relaxed mb-6"
                    style={{color: THEME.colors.text.secondary}}
                 >
-                    It also gives others a way to get to know me better and understand how
-                    I take on challenges. This site exists because this is a process I was already
-                    completing daily, and I&#39;ve chosen to make it visible.
+                    It also provides context for how I approach problems and evaluate tradeoffs
+                    by making that process visible.
                 </p>
             </section>
 
@@ -128,25 +128,6 @@ export default function AboutPage() {
                 </div>
             </section>
 
-            {/* What This Isn’t */}
-            <section className="py-8 border-t border-white/5">
-                <h2
-                    className="text-sm font-mono tracking-[0.18em] uppercase mb-3"
-                    style={{color: THEME.colors.text.muted}}
-                >
-                    What This Isn’t
-                </h2>
-                <p
-                    className="text-base md:text-lg leading-relaxed mb-6"
-                    style={{color: THEME.colors.text.secondary}}
-                >
-                    This isn’t a replacement for Jira, formal documentation, or project
-                    management tools. It isn’t a productivity tracker or a polished case
-                    study library. It&#39;s a public representation of how I think and accomplish
-                    goals in a way provides context but isn&#39;t too revealing.
-                </p>
-            </section>
-
             {/* Philosophy */}
             <section className="py-8 border-t border-white/5 pb-12 md:pb-16">
                 <h2
@@ -159,17 +140,17 @@ export default function AboutPage() {
                     className="text-base md:text-lg leading-relaxed mb-6"
                     style={{color: THEME.colors.text.secondary}}
                 >
-                    I value being deliberate. To me means understanding the system well
-                    enough to explain the decisions behind it, the tradeoffs that were made,
-                    and the consequences that followed and not just that something released.
+                    I value being deliberate. To me, that means understanding systems well
+                    enough to explain the decisions behind them, the tradeoffs that were made,
+                    and the consequences that followed, not just that something was released.
                 </p>
                 <p
                     className="text-base md:text-lg leading-relaxed mb-6"
                     style={{color: THEME.colors.text.secondary}}
                 >
                     This log is how I hold myself to that standard. Writing the work down
-                    forces me to be explicit about my reasoning, exposes weak assumptions,
-                    and creates a record I can revisit as the system or my thinking evolves over time.
+                    forces clarity in my reasoning, exposes weak assumptions,
+                    and creates a record I can revisit as the systems, or my thinking, evolve over time.
                 </p>
             </section>
 
