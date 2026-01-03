@@ -106,7 +106,7 @@ export function EntryTimeline({
 
                             {entry.body && (
                                 <p
-                                    className="text-sm leading-relaxed mb-4"
+                                    className="text-sm leading-relaxed mb-4 whitespace-pre-wrap"
                                     style={{ color: THEME.colors.text.secondary }}
                                 >
                                     {entry.body}
