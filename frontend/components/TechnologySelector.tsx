@@ -37,6 +37,7 @@ const AVAILABLE_TECHNOLOGIES = [
     'SQL',
     'JPA',
     'Oracle',
+    'Insomnia',
     'TensorFlow',
     'PyTorch',
     'MLflow',
