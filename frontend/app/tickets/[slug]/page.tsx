@@ -94,7 +94,7 @@ export default async function TicketDetailPage({ params }: PageProps) {
           {ticket.background && (
             <SectionCard title="Background">
               <p
-                className="text-base leading-relaxed"
+                className="text-base leading-relaxed whitespace-pre-wrap"
                 style={{ color: THEME.colors.text.secondary }}
               >
                 {ticket.background}

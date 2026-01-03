@@ -499,7 +499,7 @@ export default function ManageEntriesPage({ params }: { params: { slug: string }
                                     value={formData.body}
                                     onChange={(e) => setFormData({ ...formData, body: e.target.value })}
                                     rows={8}
-                                    className="w-full px-4 py-2 text-sm resize-none"
+                                    className="w-full px-4 py-2 text-sm resize-none whitespace-pre-wrap"
                                     style={{
                                         backgroundColor: THEME.colors.surface.elevated,
                                         color: THEME.colors.text.primary,
