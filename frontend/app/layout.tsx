@@ -5,13 +5,14 @@ import Link from 'next/link';
 import { THEME } from '@/lib/theme';
 import { MobileMenu } from '@/components/MobileMenu';
 import { ClientLayout } from '@/components/ClientLayout';
+import { Analytics } from "@vercel/analytics/next"
+import { SpeedInsights } from "@vercel/speed-insights/next"
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 const robotoMono = Roboto_Mono({ subsets: ['latin'], variable: '--font-roboto-mono' });
 
 export const metadata: Metadata = {
   title: "Changelog - Corey’s Engineering Log",
-  description: "Developer work log and impact tracker",
   icons: "/favicon.ico",
 };
 
@@ -23,7 +24,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${inter.variable} ${robotoMono.variable} font-sans`}>
-        <ClientLayout>
+      <Analytics />
+      <SpeedInsights />
+      <ClientLayout>
           <nav
             className="border-b sticky top-0 z-50 backdrop-blur-md"
             style={{
