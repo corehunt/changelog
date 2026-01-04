@@ -34,6 +34,7 @@ const AVAILABLE_TECHNOLOGIES = [
     'Nginx',
     'Apache',
     'Hibernate',
+    'Maven',
     'SQL',
     'JPA',
     'Oracle',
