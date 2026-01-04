@@ -743,7 +743,7 @@ export default function ManageEntriesPage({ params }: { params: { slug: string }
                                     </div>
                                 </div>
 
-                                <div className="text-sm leading-relaxed" style={{ color: THEME.colors.text.secondary }}>
+                                <div className="text-sm leading-relaxed whitespace-pre-wrap" style={{ color: THEME.colors.text.secondary }}>
                                     {entry.body}
                                 </div>
 

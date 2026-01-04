@@ -44,7 +44,7 @@ export default async function TicketDetailPage({ params }: PageProps) {
                       What I Learned
                     </h3>
                     <p
-                      className="text-base leading-relaxed"
+                      className="text-base leading-relaxed whitespace-pre-wrap"
                       style={{ color: THEME.colors.text.secondary }}
                     >
                       {ticket.learned}
@@ -61,7 +61,7 @@ export default async function TicketDetailPage({ params }: PageProps) {
                       Roadblocks
                     </h3>
                     <p
-                      className="text-base leading-relaxed"
+                      className="text-base leading-relaxed whitespace-pre-wrap"
                       style={{ color: THEME.colors.text.secondary }}
                     >
                       {ticket.roadblocksSummary}
@@ -78,7 +78,7 @@ export default async function TicketDetailPage({ params }: PageProps) {
                       Metrics & Impact
                     </h3>
                     <p
-                      className="text-base leading-relaxed"
+                      className="text-base leading-relaxed whitespace-pre-wrap"
                       style={{ color: THEME.colors.text.secondary }}
                     >
                       {ticket.metricsSummary}
