@@ -38,6 +38,7 @@ const AVAILABLE_TECHNOLOGIES = [
     'SQL',
     'JPA',
     'Oracle',
+    'JUnit',
     'Insomnia',
     'TensorFlow',
     'PyTorch',
