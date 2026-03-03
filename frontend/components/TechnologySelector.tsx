@@ -29,6 +29,7 @@ const AVAILABLE_TECHNOLOGIES = [
     'Docker',
     'Kubernetes',
     'AWS',
+    'Concurrency Control',
     'JDBI',
     'CompletableFuture',
     'Splunk',
