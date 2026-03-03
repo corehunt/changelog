@@ -52,8 +52,8 @@ export function EntryTimeline({
 
     const sortedEntries = [...entries].sort(
         (a, b) =>
-            toLocalDateOnly(b.date).getTime() -
-            toLocalDateOnly(a.date).getTime()
+            toLocalDateOnly(a.date).getTime() -
+            toLocalDateOnly(b.date).getTime()
     );
 
     return (
