@@ -35,22 +35,22 @@ export default async function TicketDetailPage({ params }: PageProps) {
           {(ticket.learned || ticket.roadblocksSummary || ticket.metricsSummary) && (
             <SectionCard title="Postmortem">
               <div className="space-y-6">
-                {ticket.learned && (
-                  <div>
-                    <h3
-                      className="text-lg font-mono font-semibold mb-3"
-                      style={{ color: THEME.colors.text.primary }}
-                    >
-                      What I Learned
-                    </h3>
-                    <p
-                      className="text-base leading-relaxed whitespace-pre-wrap"
-                      style={{ color: THEME.colors.text.secondary }}
-                    >
-                      {ticket.learned}
-                    </p>
-                  </div>
-                )}
+                  {ticket.metricsSummary && (
+                      <div>
+                          <h3
+                              className="text-lg font-mono font-semibold mb-3"
+                              style={{ color: THEME.colors.text.primary }}
+                          >
+                              Metrics & Impact
+                          </h3>
+                          <p
+                              className="text-base leading-relaxed whitespace-pre-wrap"
+                              style={{ color: THEME.colors.text.secondary }}
+                          >
+                              {ticket.metricsSummary}
+                          </p>
+                      </div>
+                  )}
 
                 {ticket.roadblocksSummary && (
                   <div>
@@ -69,22 +69,22 @@ export default async function TicketDetailPage({ params }: PageProps) {
                   </div>
                 )}
 
-                {ticket.metricsSummary && (
-                  <div>
-                    <h3
-                      className="text-lg font-mono font-semibold mb-3"
-                      style={{ color: THEME.colors.text.primary }}
-                    >
-                      Metrics & Impact
-                    </h3>
-                    <p
-                      className="text-base leading-relaxed whitespace-pre-wrap"
-                      style={{ color: THEME.colors.text.secondary }}
-                    >
-                      {ticket.metricsSummary}
-                    </p>
-                  </div>
-                )}
+                  {ticket.learned && (
+                      <div>
+                          <h3
+                              className="text-lg font-mono font-semibold mb-3"
+                              style={{ color: THEME.colors.text.primary }}
+                          >
+                              What I Learned
+                          </h3>
+                          <p
+                              className="text-base leading-relaxed whitespace-pre-wrap"
+                              style={{ color: THEME.colors.text.secondary }}
+                          >
+                              {ticket.learned}
+                          </p>
+                      </div>
+                  )}
               </div>
             </SectionCard>
           )}
