@@ -22,6 +22,8 @@ function formatDateOnlyForDisplay(dateStr?: string | null): string {
   });
 }
 
+export const dynamic = "force-dynamic";
+
 export default async function Home() {
   const dashboard = await getDashboardHome();
 
