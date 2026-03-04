@@ -7,6 +7,7 @@ import { MobileMenu } from '@/components/MobileMenu';
 import { ClientLayout } from '@/components/ClientLayout';
 import { Analytics } from "@vercel/analytics/next"
 import { SpeedInsights } from "@vercel/speed-insights/next"
+import { DisclaimerBanner } from '@/components/DisclaimerBanner';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 const robotoMono = Roboto_Mono({ subsets: ['latin'], variable: '--font-roboto-mono' });
@@ -71,6 +72,7 @@ export default function RootLayout({
           <main className="min-h-screen">
             {children}
           </main>
+          <DisclaimerBanner />
         </ClientLayout>
       </body>
     </html>
