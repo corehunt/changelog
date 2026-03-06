@@ -4,7 +4,7 @@ import {SocialIcons} from '@/components/SocialIcons';
 
 export default function AboutPage() {
     return (
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-20">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
             <PageHeader
                 title="About"
                 subtitle="How I work and why this log exists"

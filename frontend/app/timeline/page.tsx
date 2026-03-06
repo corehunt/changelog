@@ -51,7 +51,7 @@ export default function TimelinePage() {
 
   return (
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
-        <PageHeader title="Timeline" subtitle="Chronological view of shipped and active work" />
+        <PageHeader title="Timeline" subtitle="Chronological view of deployed and active work" />
 
         {loading ? (
             <div className="py-12 text-center text-sm" style={{ color: THEME.colors.text.muted }}>
