@@ -37,11 +37,18 @@ export default function RootLayout({
           >
             <div className="max-w-7xl mx-auto px-6 md:px-12 lg:px-16">
               <div className="flex items-center justify-between h-20">
-                <div className="flex items-center gap-12">
+                <div className="flex items-center gap-12 font-mono">
                   <span className="font-semibold text-sm tracking-wider">{'>_'} changelog/</span>
                   <div className="hidden md:flex items-center gap-8">
+                      <Link
+                          href="/"
+                          className="text-sm hover:text-white transition-colors"
+                          style={{color: THEME.colors.text.secondary}}
+                      >
+                          home/
+                      </Link>
                     <Link
-                        href="/"
+                        href="/tickets"
                         className="text-sm hover:text-white transition-colors"
                         style={{color: THEME.colors.text.secondary}}
                     >
